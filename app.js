@@ -261,7 +261,7 @@
     const label={title:"제목",body:"본문",eyebrow:"상단 문구"}[state.selected]||"추가 텍스트";
     els.selection.textContent=l?(label+" 선택됨"):"텍스트를 선택하세요";
     if(l){$("#fontFamily").value=l.font;$("#fontSize").value=l.size;$("#fontWeight").value=String(l.weight);$("#fontColor").value=l.color;$$(".align-buttons button").forEach(b=>b.classList.toggle("active",b.dataset.align===l.align));}
-    if(c){$("#imageZoom").value=c.imageZoom;$("#imageZoom").disabled=!c.image;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));}
+    if(c){$("#imageZoom").value=c.imageZoom;$("#imageZoom").disabled=!c.image;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));}
     els.zoomValue.textContent=Math.round(state.zoom*100)+"%";
     $("#stageScaler").style.transform=`scale(${state.zoom/.7})`;
   }
@@ -313,7 +313,7 @@
   function applyTemplate(name){
     const t=TEMPLATES[name]; if(!t)return;
     state.template=name;
-    $(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));
+    $$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));
     const c=activeCard();if(!c)return;
     remember();
 
@@ -433,7 +433,7 @@
   $("#downloadPageBtn").addEventListener("click",downloadCurrent);$("#downloadAllBtn").addEventListener("click",downloadAll);
 
   window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();}});
-  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-noimage1",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-templatefix2",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
   try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
   render();
 
