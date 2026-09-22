@@ -342,7 +342,7 @@
     const label={title:"제목",body:"본문",eyebrow:"상단 문구"}[state.selected]||"추가 텍스트";
     els.selection.textContent=l?(label+" 선택됨"):"텍스트를 선택하세요";
     if(l){$("#fontFamily").value=l.font;$("#fontSize").value=l.size;$("#fontWeight").value=String(l.weight);$("#fontColor").value=l.color;$$(".align-buttons button").forEach(b=>b.classList.toggle("active",b.dataset.align===l.align));}
-    if(c){$("#imageZoom").value=c.imageZoom??100;$("#imageX").value=c.imageX??50;$("#imageY").value=c.imageY??50;$("#imageBlur").value=c.imageBlur??0;$("#imageZoom").disabled=!c.image;$("#imageX").disabled=!c.image;$("#imageY").disabled=!c.image;$("#imageBlur").disabled=!c.image;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));} $(".card-set").forEach(b=>b.classList.toggle("active",b.dataset.set===state.templateSet));
+    if(c){$("#imageZoom").value=c.imageZoom??100;$("#imageX").value=c.imageX??50;$("#imageY").value=c.imageY??50;$("#imageBlur").value=c.imageBlur??0;$("#imageZoom").disabled=!c.image;$("#imageX").disabled=!c.image;$("#imageY").disabled=!c.image;$("#imageBlur").disabled=!c.image;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));} $$(".card-set").forEach(b=>b.classList.toggle("active",b.dataset.set===state.templateSet));
     els.zoomValue.textContent=Math.round(state.zoom*100)+"%";
     $("#stageScaler").style.transform=`scale(${state.zoom/.7})`;
   }
@@ -487,9 +487,9 @@
   els.imageList.addEventListener("click",e=>{const i=e.target.dataset.removeImage;if(i!==undefined){state.images.splice(Number(i),1);renderImageList();}});
   $("#referenceInput").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{state.reference=r.result;$("#referencePreview").src=r.result;$("#referencePreview").hidden=false;$("#referenceText").hidden=true;};r.readAsDataURL(f);});
   $("#generateBtn").addEventListener("click",generate);$("#undoBtn").addEventListener("click",undo);
-  $(".card-set").forEach(button=>button.addEventListener("click",async()=>{
+  $$(".card-set").forEach(button=>button.addEventListener("click",async()=>{
     state.templateSet=button.dataset.set;
-    $(".card-set").forEach(b=>b.classList.toggle("active",b===button));
+    $$(".card-set").forEach(b=>b.classList.toggle("active",b===button));
     await generate();
   }));
   $("#polishDirection").addEventListener("click",polishDirection);$("#restoreDirection").addEventListener("click",restoreDirection);
@@ -519,7 +519,7 @@
 
   window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();}});
   if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-set5a",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
-  try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
+  try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});if(!TEMPLATE_SETS[state.templateSet])state.templateSet="business";renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
   render();
 
   if(document.modelContext?.registerTool){
