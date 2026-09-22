@@ -17,7 +17,11 @@
     event:{accent:"#ffd23f",overlay:46,title:{x:70,y:650,w:940,size:98,weight:400,color:"#ffffff",align:"left",font:"'Black Han Sans', 'Noto Sans KR', sans-serif"},body:{x:76,y:1030,w:850,size:31,weight:700,color:"#ffffff",align:"left",font:"'Do Hyeon', 'Noto Sans KR', sans-serif"},eyebrow:{x:76,y:120,w:700,size:24,weight:700,color:"#ffd23f",align:"left",font:"'IBM Plex Sans KR', sans-serif"}},
     premium:{accent:"#c8a65b",overlay:58,title:{x:90,y:680,w:900,size:76,weight:800,color:"#fffdf7",align:"left",font:"'Nanum Myeongjo', 'Noto Serif KR', serif"},body:{x:94,y:1010,w:820,size:27,weight:400,color:"#eee3cb",align:"left",font:"'Noto Serif KR', serif"},eyebrow:{x:94,y:130,w:700,size:20,weight:700,color:"#d9be7d",align:"left",font:"'IBM Plex Sans KR', sans-serif"}},
     quote:{accent:"#c2a487",overlay:30,title:{x:110,y:390,w:860,size:70,weight:700,color:"#ffffff",align:"center",font:"'Gowun Batang', 'Noto Serif KR', serif"},body:{x:160,y:990,w:760,size:27,weight:400,color:"#f8efe7",align:"center",font:"'Gowun Batang', serif"},eyebrow:{x:190,y:260,w:700,size:21,weight:700,color:"#ead8c7",align:"center",font:"'IBM Plex Sans KR', sans-serif"}},
-    magazine:{accent:"#d3473e",overlay:38,title:{x:65,y:165,w:950,size:88,weight:800,color:"#ffffff",align:"left",font:"'Nanum Myeongjo', 'Noto Serif KR', serif"},body:{x:70,y:1050,w:860,size:29,weight:600,color:"#ffffff",align:"left",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:70,y:110,w:720,size:20,weight:700,color:"#ff9b94",align:"left",font:"'IBM Plex Sans KR', sans-serif"}}
+    magazine:{accent:"#d3473e",overlay:38,title:{x:65,y:165,w:950,size:88,weight:800,color:"#ffffff",align:"left",font:"'Nanum Myeongjo', 'Noto Serif KR', serif"},body:{x:70,y:1050,w:860,size:29,weight:600,color:"#ffffff",align:"left",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:70,y:110,w:720,size:20,weight:700,color:"#ff9b94",align:"left",font:"'IBM Plex Sans KR', sans-serif"}},
+    announcement:{accent:"#2563eb",overlay:20,title:{x:92,y:390,w:860,size:76,weight:800,color:"#0f172a",align:"left",font:"'Noto Sans KR', sans-serif"},body:{x:96,y:720,w:830,size:30,weight:400,color:"#475569",align:"left",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:96,y:320,w:700,size:22,weight:700,color:"#2563eb",align:"left",font:"'IBM Plex Sans KR', sans-serif"}},
+    tips:{accent:"#0f766e",overlay:18,title:{x:82,y:155,w:900,size:72,weight:800,color:"#1c1917",align:"left",font:"'Noto Sans KR', sans-serif"},body:{x:155,y:520,w:780,size:34,weight:600,color:"#292524",align:"left",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:82,y:105,w:700,size:20,weight:700,color:"#0f766e",align:"left",font:"'IBM Plex Sans KR', sans-serif"}},
+    profile:{accent:"#a78bfa",overlay:58,title:{x:100,y:620,w:880,size:70,weight:700,color:"#ffffff",align:"center",font:"'Noto Sans KR', sans-serif"},body:{x:145,y:860,w:790,size:29,weight:400,color:"#e4e4e7",align:"center",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:190,y:560,w:700,size:21,weight:700,color:"#c4b5fd",align:"center",font:"'IBM Plex Sans KR', sans-serif"}},
+    minimalcenter:{accent:"#0f172a",overlay:10,title:{x:120,y:520,w:840,size:74,weight:700,color:"#0f172a",align:"center",font:"'Gowun Batang', 'Noto Serif KR', serif"},body:{x:170,y:760,w:740,size:28,weight:400,color:"#64748b",align:"center",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:190,y:455,w:700,size:19,weight:700,color:"#94a3b8",align:"center",font:"'IBM Plex Sans KR', sans-serif"}}
   };
   const state = {
     images: [], reference:null, cards:[], active:0, selected:"title", template:"editorial",
@@ -32,6 +36,16 @@
   const uid = () => Math.random().toString(36).slice(2,9);
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const activeCard = () => state.cards[state.active];
+  const ensureExtraLayers = (card) => {
+    if(!card) return [];
+    if(!Array.isArray(card.extraLayers)) card.extraLayers=[];
+    return card.extraLayers;
+  };
+  const getLayer = (card,key) => card?.layers?.[key] || ensureExtraLayers(card).find(l=>l.id===key);
+  const layerEntries = (card) => [
+    ...["eyebrow","title","body"].map(k=>[k,card.layers[k]]),
+    ...ensureExtraLayers(card).map(l=>[l.id,l])
+  ];
   const toast = (msg) => { els.toast.textContent=msg; els.toast.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>els.toast.classList.remove("show"),1800); };
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
   const saveDraft = () => {
@@ -202,7 +216,11 @@
       event:"linear-gradient(180deg,rgba(65,15,5,.18),rgba(65,15,5,.68))",
       premium:"linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,.78))",
       quote:"linear-gradient(180deg,rgba(35,25,20,.22),rgba(35,25,20,.64))",
-      magazine:"linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.68))"
+      magazine:"linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.68))",
+      announcement:"linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.10))",
+      tips:"linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.18))",
+      profile:"linear-gradient(180deg,rgba(9,9,15,.28),rgba(9,9,15,.78))",
+      minimalcenter:"linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.40))"
     };
     return map[card.template]||`linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,${a}))`;
   }
@@ -222,6 +240,10 @@
       case "premium": return box("decor-frame",48,48,984,1254,`border:3px solid ${A};border-radius:6px`)+box("decor-line",90,650,180,3,`background:${A}`);
       case "quote": return `<div class="template-decor decor-symbol" style="left:${70*s}px;top:${280*s}px;font-size:${300*s}px;color:${A};opacity:.8">“</div>`+box("decor-line",390,930,300,3,`background:${A}`);
       case "magazine": return box("decor-panel",0,0,1080,86,`background:${A};opacity:.94`)+box("decor-frame",38,105,1004,1190,"border:3px solid rgba(255,255,255,.75)")+ `<div class="template-decor decor-kicker" style="right:${55*s}px;top:${28*s}px;font-size:${22*s}px">JB MAGAZINE</div>`;
+      case "announcement": return box("decor-paper",55,260,970,820,"background:rgba(255,255,255,.96);border-radius:12px")+box("decor-line",55,260,12,820,`background:${A}`)+box("decor-line",95,350,150,6,`background:${A}`);
+      case "tips": return box("decor-paper",45,70,990,1205,"background:rgba(250,250,249,.94);border-radius:24px")+[0,1,2].map(i=>`<div class="template-decor decor-tip-number" style="left:${82*s}px;top:${(560+i*120)*s}px;width:${54*s}px;height:${54*s}px;background:${A};font-size:${25*s}px">${i+1}</div>`).join("");
+      case "profile": return box("decor-panel",90,500,900,620,"background:rgba(24,24,27,.82);border-radius:36px")+box("decor-ring",390,180,300,300,`border:8px solid ${A};border-radius:50%;box-shadow:0 0 0 16px rgba(255,255,255,.08)`);
+      case "minimalcenter": return box("decor-paper",85,360,910,590,"background:rgba(248,250,252,.95);border-radius:18px")+box("decor-line",390,900,300,3,`background:${A};opacity:.35`);
       default:return "";
     }
   }
@@ -234,7 +256,7 @@
       <div class="stage-bg" style="background-image:url('${card.image}');transform:scale(${card.imageZoom/100})"></div>
       <div class="stage-overlay" style="background:${templateOverlay(card)}"></div>
       ${templateDecorHtml(card,ds.scale)}
-      ${["eyebrow","title","body"].map(k=>layerHtml(k,card.layers[k],ds.scale)).join("")}
+      ${layerEntries(card).map(([k,l])=>layerHtml(k,l,ds.scale)).join("")}
     `;
     bindLayers();
     els.thumbs.innerHTML=state.cards.map((c,i)=>`<button class="thumb ${i===state.active?"active":""}" data-card="${i}"><img src="${c.image}" alt=""><span>${i+1}</span></button>`).join("");
@@ -249,11 +271,11 @@
         const key=el.dataset.layer; state.selected=key; $$(".text-layer").forEach(x=>x.classList.toggle("selected",x===el));
         syncControls();
         if(el.getAttribute("contenteditable")==="true") return;
-        remember(); const l=activeCard().layers[key]; state.dragging={key,sx:e.clientX,sy:e.clientY,x:l.x,y:l.y}; el.setPointerCapture(e.pointerId);
+        remember(); const l=getLayer(activeCard(),key); if(!l)return; state.dragging={key,sx:e.clientX,sy:e.clientY,x:l.x,y:l.y}; el.setPointerCapture(e.pointerId);
       });
       el.addEventListener("pointermove",e=>{
         if(!state.dragging||state.dragging.key!==el.dataset.layer) return;
-        const ds=stageDisplaySize(); const l=activeCard().layers[state.dragging.key];
+        const ds=stageDisplaySize(); const l=getLayer(activeCard(),state.dragging.key); if(!l)return;
         l.x=Math.max(0,Math.min(ratioSize().w-l.w,state.dragging.x+(e.clientX-state.dragging.sx)/ds.scale));
         l.y=Math.max(0,Math.min(ratioSize().h-60,state.dragging.y+(e.clientY-state.dragging.sy)/ds.scale));
         el.style.left=l.x*ds.scale+"px";el.style.top=l.y*ds.scale+"px";
@@ -261,20 +283,21 @@
       el.addEventListener("pointerup",()=>{if(state.dragging){state.dragging=null;saveDraft();}});
       el.addEventListener("dblclick",()=>{el.setAttribute("contenteditable","true");el.focus();document.execCommand("selectAll",false,null);});
       el.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();el.blur();}});
-      el.addEventListener("blur",()=>{if(el.getAttribute("contenteditable")==="true"){activeCard().layers[el.dataset.layer].text=el.innerText.trim();el.removeAttribute("contenteditable");saveDraft();render();}});
+      el.addEventListener("blur",()=>{if(el.getAttribute("contenteditable")==="true"){const l=getLayer(activeCard(),el.dataset.layer); if(l)l.text=el.innerText.trim();el.removeAttribute("contenteditable");saveDraft();render();}});
       el.addEventListener("click",()=>{state.selected=el.dataset.layer;syncControls();});
     });
   }
   function syncControls(){
-    const c=activeCard(), l=c?.layers?.[state.selected];
-    els.selection.textContent=l?({title:"제목",body:"본문",eyebrow:"상단 문구"}[state.selected]+" 선택됨"):"텍스트를 선택하세요";
+    const c=activeCard(), l=getLayer(c,state.selected);
+    const label={title:"제목",body:"본문",eyebrow:"상단 문구"}[state.selected]||"추가 텍스트";
+    els.selection.textContent=l?(label+" 선택됨"):"텍스트를 선택하세요";
     if(l){$("#fontFamily").value=l.font;$("#fontSize").value=l.size;$("#fontWeight").value=String(l.weight);$("#fontColor").value=l.color;$$(".align-buttons button").forEach(b=>b.classList.toggle("active",b.dataset.align===l.align));}
     if(c){$("#imageZoom").value=c.imageZoom;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));}
     els.zoomValue.textContent=Math.round(state.zoom*100)+"%";
     $("#stageScaler").style.transform=`scale(${state.zoom/.7})`;
   }
   function updateLayer(prop,value){
-    const c=activeCard(); if(!c)return; remember(); c.layers[state.selected][prop]=value; render();saveDraft();
+    const c=activeCard(); if(!c)return; const l=getLayer(c,state.selected); if(!l)return; remember(); l[prop]=value; render();saveDraft();
   }
   async function loadLocalFonts(){
     const status=$("#localFontStatus"), button=$("#loadLocalFonts");
@@ -308,10 +331,20 @@
       status.className="local-font-status error";button.textContent="다시 불러오기";
     }finally{button.disabled=false;}
   }
+  function addTextLayer(){
+    const c=activeCard(); if(!c){toast("카드를 먼저 만들어주세요");return;}
+    remember();
+    const t=TEMPLATES[c.template]||TEMPLATES.editorial;
+    const id="extra-"+uid();
+    const darkText=["clean","press","tips","announcement","minimalcenter"].includes(c.template);
+    const layer={id,text:"새 텍스트",x:140,y:620,w:800,size:48,weight:600,color:darkText?"#172033":"#ffffff",align:"center",font:t.body.font};
+    ensureExtraLayers(c).push(layer); state.selected=id; render(); saveDraft(); toast("텍스트를 추가했습니다");
+    requestAnimationFrame(()=>{const el=document.querySelector(`[data-layer="${id}"]`);if(el){el.setAttribute("contenteditable","true");el.focus();document.execCommand("selectAll",false,null);}});
+  }
   function applyTemplate(name){
     const t=TEMPLATES[name]; if(!t)return;
     state.template=name;
-    $(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));
+    $$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));
     const c=activeCard();if(!c)return;
     remember();c.template=name;c.overlay=t.overlay;c.accent=t.accent;
     for(const k of ["eyebrow","title","body"]){const text=c.layers[k].text;c.layers[k]={...clone(t[k]),text};}
@@ -347,6 +380,10 @@
     else if(card.template==="premium"){ctx.strokeStyle=A;ctx.lineWidth=X(3);ctx.strokeRect(X(48),Y(48),X(984),Y(1254));ctx.fillStyle=A;ctx.fillRect(X(90),Y(650),X(180),Y(3));}
     else if(card.template==="quote"){ctx.globalAlpha=.8;ctx.fillStyle=A;ctx.font=`${Y(300)}px Georgia`;ctx.fillText("“",X(70),Y(280));ctx.globalAlpha=1;ctx.fillRect(X(390),Y(930),X(300),Y(3));}
     else if(card.template==="magazine"){ctx.globalAlpha=.94;ctx.fillStyle=A;ctx.fillRect(0,0,sz.w,Y(86));ctx.globalAlpha=1;ctx.strokeStyle="rgba(255,255,255,.75)";ctx.lineWidth=X(3);ctx.strokeRect(X(38),Y(105),X(1004),Y(1190));ctx.fillStyle="#fff";ctx.font=`700 ${Y(22)}px Arial`;ctx.textAlign="right";ctx.fillText("JB MAGAZINE",X(1025),Y(34));}
+    else if(card.template==="announcement"){roundRectFill(ctx,X(55),Y(260),X(970),Y(820),X(12),"rgba(255,255,255,.96)");ctx.fillStyle=A;ctx.fillRect(X(55),Y(260),X(12),Y(820));ctx.fillRect(X(95),Y(350),X(150),Y(6));}
+    else if(card.template==="tips"){roundRectFill(ctx,X(45),Y(70),X(990),Y(1205),X(24),"rgba(250,250,249,.94)");for(let i=0;i<3;i++){roundRectFill(ctx,X(82),Y(560+i*120),X(54),Y(54),X(27),A);ctx.fillStyle="#fff";ctx.font=`700 ${Y(25)}px Arial`;ctx.textAlign="center";ctx.fillText(String(i+1),X(109),Y(573+i*120));}}
+    else if(card.template==="profile"){roundRectFill(ctx,X(90),Y(500),X(900),Y(620),X(36),"rgba(24,24,27,.82)");ctx.strokeStyle=A;ctx.lineWidth=X(8);ctx.beginPath();ctx.arc(X(540),Y(330),X(150),0,Math.PI*2);ctx.stroke();}
+    else if(card.template==="minimalcenter"){roundRectFill(ctx,X(85),Y(360),X(910),Y(590),X(18),"rgba(248,250,252,.95)");ctx.globalAlpha=.35;ctx.fillStyle=A;ctx.fillRect(X(390),Y(900),X(300),Y(3));ctx.globalAlpha=1;}
     ctx.restore();
   }
   async function cardToBlob(card){
@@ -359,7 +396,7 @@
     else{grad.addColorStop(0,"rgba(0,0,0,.08)");grad.addColorStop(1,`rgba(0,0,0,${Math.min(.9,card.overlay/100+.25)})`);}
     ctx.fillStyle=grad;ctx.fillRect(0,0,sz.w,sz.h);drawTemplateDecor(ctx,card,sz);
     ctx.fillStyle=card.accent;ctx.fillRect(0,0,14,sz.h);
-    for(const key of ["eyebrow","title","body"]){const l=card.layers[key];ctx.save();ctx.fillStyle=l.color;ctx.font=`${l.weight} ${l.size}px ${l.font}`;ctx.textAlign=l.align;ctx.textBaseline="top";const lines=wrapLines(ctx,l.text,l.w);const x=l.align==="center"?l.x+l.w/2:l.align==="right"?l.x+l.w:l.x;lines.forEach((line,i)=>ctx.fillText(line,x,l.y+i*l.size*1.22));ctx.restore();}
+    for(const [key,l] of layerEntries(card)){ctx.save();ctx.fillStyle=l.color;ctx.font=`${l.weight} ${l.size}px ${l.font}`;ctx.textAlign=l.align;ctx.textBaseline="top";const lines=wrapLines(ctx,l.text,l.w);const x=l.align==="center"?l.x+l.w/2:l.align==="right"?l.x+l.w:l.x;lines.forEach((line,i)=>ctx.fillText(line,x,l.y+i*l.size*1.22));ctx.restore();}
     return new Promise(res=>canvas.toBlob(res,"image/png",1));
   }
   async function downloadCurrent(){
@@ -394,12 +431,13 @@
   $("#polishDirection").addEventListener("click",polishDirection);$("#restoreDirection").addEventListener("click",restoreDirection);
   $("#fontFamily").addEventListener("change",e=>updateLayer("font",e.target.value));$("#fontSize").addEventListener("change",e=>updateLayer("size",Number(e.target.value)));$("#fontWeight").addEventListener("change",e=>updateLayer("weight",Number(e.target.value)));$("#fontColor").addEventListener("input",e=>updateLayer("color",e.target.value));
   $("#loadLocalFonts").addEventListener("click",loadLocalFonts);
+  $("#addTextLayer").addEventListener("click",addTextLayer);
   $$(".align-buttons button").forEach(b=>b.addEventListener("click",()=>updateLayer("align",b.dataset.align)));
-  $(".template").forEach(b=>b.addEventListener("click",()=>applyTemplate(b.dataset.template)));
-  $(".template-filter button").forEach(button=>button.addEventListener("click",()=>{
+  $$(".template").forEach(b=>b.addEventListener("click",()=>applyTemplate(b.dataset.template)));
+  $$(".template-filter button").forEach(button=>button.addEventListener("click",()=>{
     const filter=button.dataset.templateFilter;
-    $(".template-filter button").forEach(b=>b.classList.toggle("active",b===button));
-    $(".template").forEach(card=>card.hidden=filter!=="all"&&card.dataset.category!==filter);
+    $$(".template-filter button").forEach(b=>b.classList.toggle("active",b===button));
+    $$(".template").forEach(card=>card.hidden=filter!=="all"&&card.dataset.category!==filter);
   }));
   $("#imageZoom").addEventListener("input",e=>{if(activeCard()){activeCard().imageZoom=Number(e.target.value);render();}});
   $("#overlayStrength").addEventListener("input",e=>{if(activeCard()){activeCard().overlay=Number(e.target.value);render();}});
