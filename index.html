@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;600;700;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23191714'/%3E%3Crect x='15' y='13' width='30' height='38' rx='4' fill='%23fff'/%3E%3Cpath d='M22 24h16M22 31h12M22 38h16' stroke='%23ee5b2b' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./app.css?v=20260922-fonts2" />
+  <link rel="stylesheet" href="./app.css?v=20260922-templates3" />
 </head>
 <body>
   <header class="topbar">
@@ -131,11 +131,15 @@
           <button class="template" data-template="premium" data-category="story"><i class="t-premium"></i><span>프리미엄</span></button>
           <button class="template" data-template="quote" data-category="story"><i class="t-quote"></i><span>인용문</span></button>
           <button class="template" data-template="magazine" data-category="story"><i class="t-magazine"></i><span>매거진</span></button>
+          <button class="template" data-template="announcement" data-category="business"><i class="t-announcement"></i><span>공지형</span></button>
+          <button class="template" data-template="tips" data-category="social"><i class="t-tips"></i><span>팁 리스트</span></button>
+          <button class="template" data-template="profile" data-category="story"><i class="t-profile"></i><span>프로필 카드</span></button>
+          <button class="template" data-template="minimalcenter" data-category="story"><i class="t-minimalcenter"></i><span>미니멀 센터</span></button>
         </div>
       </div>
 
       <div class="style-section" id="textControls">
-        <h3>선택한 글자</h3>
+        <div class="text-section-head"><h3>선택한 글자</h3><button id="addTextLayer" class="add-text-button" type="button">＋ 텍스트 추가</button></div>
         <label class="control-label">글꼴
           <select id="fontFamily">
             <option value="'Noto Sans KR', Pretendard, Arial, sans-serif">노토 고딕</option>
@@ -177,6 +181,6 @@
   </main>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="./app.js?v=20260922-fonts2"></script>
+  <script src="./app.js?v=20260922-templates3"></script>
 </body>
 </html>
