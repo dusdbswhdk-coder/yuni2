@@ -23,8 +23,60 @@
     profile:{accent:"#a78bfa",overlay:58,title:{x:100,y:620,w:880,size:70,weight:700,color:"#ffffff",align:"center",font:"'Noto Sans KR', sans-serif"},body:{x:145,y:860,w:790,size:29,weight:400,color:"#e4e4e7",align:"center",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:190,y:560,w:700,size:21,weight:700,color:"#c4b5fd",align:"center",font:"'IBM Plex Sans KR', sans-serif"}},
     minimalcenter:{accent:"#0f172a",overlay:10,title:{x:120,y:520,w:840,size:74,weight:700,color:"#0f172a",align:"center",font:"'Gowun Batang', 'Noto Serif KR', serif"},body:{x:170,y:760,w:740,size:28,weight:400,color:"#64748b",align:"center",font:"'IBM Plex Sans KR', sans-serif"},eyebrow:{x:190,y:455,w:700,size:19,weight:700,color:"#94a3b8",align:"center",font:"'IBM Plex Sans KR', sans-serif"}}
   };
+  const TEMPLATE_SETS = {
+    business:{
+      label:"기업 PR",
+      cards:[
+        {role:"cover",template:"editorial",variant:"full"},
+        {role:"key",template:"corporate",variant:"zoom"},
+        {role:"detail",template:"clean",variant:"left"},
+        {role:"points",template:"announcement",variant:"blur"},
+        {role:"closing",template:"premium",variant:"bottom"}
+      ]
+    },
+    sns:{
+      label:"SNS 홍보",
+      cards:[
+        {role:"cover",template:"bold",variant:"full"},
+        {role:"problem",template:"product",variant:"zoom"},
+        {role:"solution",template:"clean",variant:"right"},
+        {role:"summary",template:"tips",variant:"blur"},
+        {role:"cta",template:"event",variant:"bottom"}
+      ]
+    },
+    interview:{
+      label:"인터뷰",
+      cards:[
+        {role:"intro",template:"profile",variant:"full"},
+        {role:"quote",template:"quote",variant:"face"},
+        {role:"answer",template:"interview",variant:"left"},
+        {role:"insight",template:"magazine",variant:"right"},
+        {role:"closing",template:"minimalcenter",variant:"blur"}
+      ]
+    },
+    event:{
+      label:"이벤트",
+      cards:[
+        {role:"cover",template:"event",variant:"full"},
+        {role:"intro",template:"bold",variant:"zoom"},
+        {role:"info",template:"announcement",variant:"right"},
+        {role:"benefit",template:"checklist",variant:"blur"},
+        {role:"cta",template:"premium",variant:"bottom"}
+      ]
+    },
+    compare:{
+      label:"비교·체크",
+      cards:[
+        {role:"cover",template:"compare",variant:"full"},
+        {role:"compareA",template:"stats",variant:"zoom"},
+        {role:"compareB",template:"clean",variant:"left"},
+        {role:"check",template:"tips",variant:"right"},
+        {role:"closing",template:"minimalcenter",variant:"blur"}
+      ]
+    }
+  };
   const state = {
-    images: [], reference:null, cards:[], active:0, selected:"title", template:"editorial",
+    images: [], reference:null, cards:[], active:0, selected:"title", template:"editorial", templateSet:"business",
     ratio:"4:5", zoom:.7, history:[], dragging:null, originalDirection:null
   };
   const els = {
@@ -111,6 +163,41 @@
     }
     return cards;
   }
+  function imageVariantSettings(variant){
+    const map={
+      full:{zoom:100,x:50,y:50,blur:0},
+      zoom:{zoom:145,x:50,y:38,blur:0},
+      face:{zoom:170,x:50,y:28,blur:0},
+      left:{zoom:128,x:30,y:50,blur:0},
+      right:{zoom:128,x:70,y:50,blur:0},
+      blur:{zoom:118,x:50,y:50,blur:9},
+      bottom:{zoom:112,x:50,y:66,blur:0}
+    };
+    return map[variant]||map.full;
+  }
+  function buildCardSet(setName,direction,refColor){
+    const set=TEMPLATE_SETS[setName]||TEMPLATE_SETS.business;
+    const copy=smartCopy(direction,set.cards.length);
+    const hasImages=state.images.length>0;
+    return set.cards.map((config,i)=>{
+      const t=TEMPLATES[config.template]||TEMPLATES.editorial;
+      const img=hasImages?state.images[i%state.images.length]:null;
+      const v=imageVariantSettings(config.variant);
+      return {
+        id:uid(), role:config.role, template:config.template,
+        image:img?.data||"", name:img?.name||"",
+        imageVariant:config.variant, imageZoom:v.zoom, imageX:v.x, imageY:v.y, imageBlur:v.blur,
+        overlay:t.overlay, accent:refColor||t.accent,
+        layers:{
+          eyebrow:{...clone(t.eyebrow),text:copy[i]?.eyebrow||""},
+          title:{...clone(t.title),text:copy[i]?.title||""},
+          body:{...clone(t.body),text:copy[i]?.body||""}
+        },
+        extraLayers:[]
+      };
+    });
+  }
+
   function polishDirection(){
     const input=els.direction.value.trim();
     if(!input){toast("원하는 방향을 간단히 적어주세요");els.direction.focus();return;}
@@ -141,19 +228,13 @@
   }
   async function generate(){
     remember();
-    const count=Number(els.count.value); const copy=smartCopy(els.direction.value,count);
-    const refColor=await getThemeSample(); const template=TEMPLATES[state.template];
-    const hasImages=state.images.length>0;
-    state.cards=copy.map((c,i)=>({
-      id:uid(), image:hasImages?state.images[i%state.images.length].data:"", name:hasImages?state.images[i%state.images.length].name:"",
-      template:state.template, overlay:template.overlay, imageZoom:100, accent:refColor||template.accent,
-      layers:{
-        eyebrow:{...clone(template.eyebrow),text:c.eyebrow},
-        title:{...clone(template.title),text:c.title},
-        body:{...clone(template.body),text:c.body}
-      }
-    }));
-    state.active=0; state.selected="title"; render(); saveDraft(); toast(hasImages?"입력한 문장과 사진으로 카드를 만들었습니다":"사진 없이 텍스트 카드뉴스를 만들었습니다");
+    const refColor=await getThemeSample();
+    const set=TEMPLATE_SETS[state.templateSet]||TEMPLATE_SETS.business;
+    state.cards=buildCardSet(state.templateSet,els.direction.value,refColor);
+    state.template=set.cards[0].template;
+    state.active=0; state.selected="title";
+    render(); saveDraft();
+    toast(state.images.length?set.label+" 5장 · 이미지 베리에이션 완료":set.label+" 5장 · 텍스트 전용으로 생성");
   }
   function ratioSize(){
     if(state.ratio==="1:1") return {w:1080,h:1080};
@@ -215,13 +296,13 @@
     if(!card){els.stage.innerHTML="";els.stage.appendChild(els.empty);els.empty.hidden=false;els.thumbs.innerHTML="";syncControls();return;}
     els.empty.hidden=true;
     els.stage.innerHTML=`
-      <div class="stage-bg ${card.image?"":"text-only"}" style="${card.image?`background-image:url(\'${card.image}\');transform:scale(${card.imageZoom/100})`:`background:${["clean","press","announcement","tips","minimalcenter"].includes(card.template)?"#f4f1e9":"#172033"}`}"></div>
+      <div class="stage-bg ${card.image?"":"text-only"}" style="${card.image?`background-image:url('${card.image}');background-position:${card.imageX??50}% ${card.imageY??50}%;transform:scale(${(card.imageZoom??100)/100});filter:blur(${card.imageBlur??0}px)`:`background:${["clean","press","announcement","tips","minimalcenter"].includes(card.template)?"#f4f1e9":"#172033"}`}"></div>
       <div class="stage-overlay" style="background:${templateOverlay(card)}"></div>
       ${templateDecorHtml(card,ds.scale)}
       ${layerEntries(card).map(([k,l])=>layerHtml(k,l,ds.scale)).join("")}
     `;
     bindLayers();
-    els.thumbs.innerHTML=state.cards.map((c,i)=>`<button class="thumb ${i===state.active?"active":""}" data-card="${i}">${c.image?`<img src="${c.image}" alt="">`:`<i class="thumb-text-only" style="background:${["clean","press","announcement","tips","minimalcenter"].includes(c.template)?"#f4f1e9":"#172033"}"></i>`}<span>${i+1}</span></button>`).join("");
+    els.thumbs.innerHTML=state.cards.map((c,i)=>`<button class="thumb ${i===state.active?"active":""}" data-card="${i}">${c.image?`<i class="thumb-image" style="background-image:url(\'${c.image}\');background-position:${c.imageX??50}% ${c.imageY??50}%;transform:scale(${Math.max(1,(c.imageZoom??100)/120)});filter:blur(${Math.min(2,c.imageBlur??0)}px)"></i>`:`<i class="thumb-text-only" style="background:${["clean","press","announcement","tips","minimalcenter"].includes(c.template)?"#f4f1e9":"#172033"}"></i>`}<span>${i+1}</span></button>`).join("");
     syncControls();
   }
   function layerHtml(key,l,s){
@@ -261,7 +342,7 @@
     const label={title:"제목",body:"본문",eyebrow:"상단 문구"}[state.selected]||"추가 텍스트";
     els.selection.textContent=l?(label+" 선택됨"):"텍스트를 선택하세요";
     if(l){$("#fontFamily").value=l.font;$("#fontSize").value=l.size;$("#fontWeight").value=String(l.weight);$("#fontColor").value=l.color;$$(".align-buttons button").forEach(b=>b.classList.toggle("active",b.dataset.align===l.align));}
-    if(c){$("#imageZoom").value=c.imageZoom;$("#imageZoom").disabled=!c.image;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));}
+    if(c){$("#imageZoom").value=c.imageZoom??100;$("#imageX").value=c.imageX??50;$("#imageY").value=c.imageY??50;$("#imageBlur").value=c.imageBlur??0;$("#imageZoom").disabled=!c.image;$("#imageX").disabled=!c.image;$("#imageY").disabled=!c.image;$("#imageBlur").disabled=!c.image;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));} $(".card-set").forEach(b=>b.classList.toggle("active",b.dataset.set===state.templateSet));
     els.zoomValue.textContent=Math.round(state.zoom*100)+"%";
     $("#stageScaler").style.transform=`scale(${state.zoom/.7})`;
   }
@@ -330,7 +411,7 @@
   }
   function addPage(){
     remember(); const prev=activeCard(); const t=TEMPLATES[state.template];
-    state.cards.push(prev?{...clone(prev),id:uid()}:{id:uid(),image:state.images[0]?.data||"",name:state.images[0]?.name||"",template:state.template,overlay:t.overlay,imageZoom:100,accent:t.accent,layers:{eyebrow:{...clone(t.eyebrow),text:""},title:{...clone(t.title),text:""},body:{...clone(t.body),text:""}}});
+    state.cards.push(prev?{...clone(prev),id:uid()}:{id:uid(),image:state.images[0]?.data||"",name:state.images[0]?.name||"",template:state.template,overlay:t.overlay,imageZoom:100,imageX:50,imageY:50,imageBlur:0,accent:t.accent,layers:{eyebrow:{...clone(t.eyebrow),text:""},title:{...clone(t.title),text:""},body:{...clone(t.body),text:""}}});
     state.active=state.cards.length-1;render();saveDraft();
   }
   function duplicatePage(){if(!activeCard())return;remember();state.cards.splice(state.active+1,0,{...clone(activeCard()),id:uid()});state.active++;render();saveDraft();toast("카드를 복제했습니다");}
@@ -368,7 +449,7 @@
     if(document.fonts?.ready) await document.fonts.ready;
     const sz=ratioSize(), canvas=document.createElement("canvas");canvas.width=sz.w;canvas.height=sz.h;const ctx=canvas.getContext("2d");
     if(card.image){
-      const img=await loadImage(card.image); const scale=Math.max(sz.w/img.width,sz.h/img.height)*(card.imageZoom/100);const w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(sz.w-w)/2,(sz.h-h)/2,w,h);
+      const img=await loadImage(card.image); const scale=Math.max(sz.w/img.width,sz.h/img.height)*((card.imageZoom??100)/100);const w=img.width*scale,h=img.height*scale;const px=(card.imageX??50)/100,py=(card.imageY??50)/100;const dx=(sz.w-w)*px,dy=(sz.h-h)*py;ctx.save();ctx.filter=(card.imageBlur??0)>0?`blur(${card.imageBlur}px)`:"none";ctx.drawImage(img,dx,dy,w,h);ctx.restore();
     }else{
       ctx.fillStyle=["clean","press","announcement","tips","minimalcenter"].includes(card.template)?"#f4f1e9":"#172033";ctx.fillRect(0,0,sz.w,sz.h);
     }
@@ -406,9 +487,10 @@
   els.imageList.addEventListener("click",e=>{const i=e.target.dataset.removeImage;if(i!==undefined){state.images.splice(Number(i),1);renderImageList();}});
   $("#referenceInput").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{state.reference=r.result;$("#referencePreview").src=r.result;$("#referencePreview").hidden=false;$("#referenceText").hidden=true;};r.readAsDataURL(f);});
   $("#generateBtn").addEventListener("click",generate);$("#undoBtn").addEventListener("click",undo);
-  $$(".count-tabs button").forEach(button=>button.addEventListener("click",()=>{
-    $("#cardCount").value=button.dataset.count;
-    $$(".count-tabs button").forEach(item=>item.classList.toggle("active",item===button));
+  $(".card-set").forEach(button=>button.addEventListener("click",async()=>{
+    state.templateSet=button.dataset.set;
+    $(".card-set").forEach(b=>b.classList.toggle("active",b===button));
+    await generate();
   }));
   $("#polishDirection").addEventListener("click",polishDirection);$("#restoreDirection").addEventListener("click",restoreDirection);
   $("#fontFamily").addEventListener("change",e=>updateLayer("font",e.target.value));$("#fontSize").addEventListener("change",e=>updateLayer("size",Number(e.target.value)));$("#fontWeight").addEventListener("change",e=>updateLayer("weight",Number(e.target.value)));$("#fontColor").addEventListener("input",e=>updateLayer("color",e.target.value));
@@ -422,6 +504,9 @@
     $$(".template").forEach(card=>card.hidden=filter!=="all"&&card.dataset.category!==filter);
   }));
   $("#imageZoom").addEventListener("input",e=>{if(activeCard()){activeCard().imageZoom=Number(e.target.value);render();}});
+  $("#imageX").addEventListener("input",e=>{if(activeCard()){activeCard().imageX=Number(e.target.value);render();}});
+  $("#imageY").addEventListener("input",e=>{if(activeCard()){activeCard().imageY=Number(e.target.value);render();}});
+  $("#imageBlur").addEventListener("input",e=>{if(activeCard()){activeCard().imageBlur=Number(e.target.value);render();}});
   $("#overlayStrength").addEventListener("input",e=>{if(activeCard()){activeCard().overlay=Number(e.target.value);render();}});
   $("#accentColor").addEventListener("input",e=>{if(activeCard()){activeCard().accent=e.target.value;render();}});
   $("#ratioSelect").addEventListener("change",e=>{state.ratio=e.target.value;render();saveDraft();});
@@ -433,7 +518,7 @@
   $("#downloadPageBtn").addEventListener("click",downloadCurrent);$("#downloadAllBtn").addEventListener("click",downloadAll);
 
   window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();}});
-  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-templatefix2",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-set5a",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
   try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
   render();
 
@@ -441,9 +526,9 @@
     const lifecycle=new AbortController();
     Promise.resolve(document.modelContext.registerTool({
       name:"generate_card_news",title:"카드뉴스 자동 구성",description:"현재 입력된 방향성과 업로드된 이미지로 편집 가능한 카드 세트를 구성합니다.",
-      inputSchema:{type:"object",properties:{direction:{type:"string"},count:{type:"integer",minimum:1,maximum:10}},required:["direction"],additionalProperties:false},
+      inputSchema:{type:"object",properties:{direction:{type:"string"},set:{type:"string",enum:["business","sns","interview","event","compare"]}},required:["direction"],additionalProperties:false},
       annotations:{readOnlyHint:false,untrustedContentHint:false},
-      async execute(input){els.direction.value=input.direction;if(input.count){els.count.value=String(input.count);$$(".count-tabs button").forEach(button=>button.classList.toggle("active",button.dataset.count===String(input.count)));}await generate();return{count:state.cards.length,status:"generated"};}
+      async execute(input){els.direction.value=input.direction;if(input.set&&TEMPLATE_SETS[input.set])state.templateSet=input.set;await generate();return{count:state.cards.length,set:state.templateSet,status:"generated"};}
     },{signal:lifecycle.signal})).catch(()=>{});
   }
 })();
