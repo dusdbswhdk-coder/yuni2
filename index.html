@@ -106,10 +106,28 @@
 
       <div class="style-section">
         <h3>템플릿</h3>
-        <div class="template-grid">
-          <button class="template active" data-template="editorial"><i class="t-editorial"></i><span>에디토리얼</span></button>
-          <button class="template" data-template="bold"><i class="t-bold"></i><span>볼드</span></button>
-          <button class="template" data-template="clean"><i class="t-clean"></i><span>클린</span></button>
+        <div class="template-filter" role="group" aria-label="템플릿 카테고리">
+          <button class="active" data-template-filter="all">전체</button>
+          <button data-template-filter="business">기업</button>
+          <button data-template-filter="social">SNS</button>
+          <button data-template-filter="story">스토리</button>
+        </div>
+        <div class="template-grid template-gallery">
+          <button class="template active" data-template="editorial" data-category="business"><i class="t-editorial"></i><span>에디토리얼</span></button>
+          <button class="template" data-template="bold" data-category="social"><i class="t-bold"></i><span>볼드</span></button>
+          <button class="template" data-template="clean" data-category="business"><i class="t-clean"></i><span>클린</span></button>
+          <button class="template" data-template="corporate" data-category="business"><i class="t-corporate"></i><span>기업 PR</span></button>
+          <button class="template" data-template="press" data-category="business"><i class="t-press"></i><span>보도자료</span></button>
+          <button class="template" data-template="product" data-category="business"><i class="t-product"></i><span>신제품</span></button>
+          <button class="template" data-template="interview" data-category="story"><i class="t-interview"></i><span>인터뷰</span></button>
+          <button class="template" data-template="stats" data-category="business"><i class="t-stats"></i><span>숫자 강조</span></button>
+          <button class="template" data-template="compare" data-category="business"><i class="t-compare"></i><span>비교</span></button>
+          <button class="template" data-template="checklist" data-category="social"><i class="t-checklist"></i><span>체크리스트</span></button>
+          <button class="template" data-template="qa" data-category="social"><i class="t-qa"></i><span>Q&A</span></button>
+          <button class="template" data-template="event" data-category="social"><i class="t-event"></i><span>이벤트</span></button>
+          <button class="template" data-template="premium" data-category="story"><i class="t-premium"></i><span>프리미엄</span></button>
+          <button class="template" data-template="quote" data-category="story"><i class="t-quote"></i><span>인용문</span></button>
+          <button class="template" data-template="magazine" data-category="story"><i class="t-magazine"></i><span>매거진</span></button>
         </div>
       </div>
 
