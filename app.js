@@ -200,25 +200,72 @@
 
   function polishDirection(){
     const input=els.direction.value.trim();
-    if(!input){toast("원하는 방향을 간단히 적어주세요");els.direction.focus();return;}
+    if(!input){toast("다듬을 문장을 입력해주세요");els.direction.focus();return;}
     if(!state.originalDirection) state.originalDirection=input;
+
     const tone=$("#toneSelect").value;
-    let core=input
-      .replace(/(대충|그냥|좀|약간|뭔가|알아서|예쁘게|있어\s*보이게)/g,"")
-      .replace(/(만들어\s*줘|해\s*줘|해주세요|해줘)/g,"")
-      .replace(/\s+/g," ").replace(/^[,。.\s]+|[,。.\s]+$/g,"").trim();
-    if(!core) core=input;
-    const subject=/행사|간담회|발표|현장/.test(core)?"현장의 핵심 메시지와 분위기":/제품|신제품|브랜드/.test(core)?"제품의 핵심 가치와 차별점":/인터뷰|사람|인물/.test(core)?"인물의 이야기와 핵심 메시지":"핵심 내용을";
-    const recipes={
-      premium:`${core}. ${subject}를 세련된 에디토리얼 구성으로 전달한다. 절제된 문장과 명확한 정보 위계를 사용하고, 첫 장은 시선을 끄는 헤드라인으로 시작한다. 전체적으로 전문성과 신뢰감이 느껴지도록 구성한다.`,
-      press:`${core}. 사실관계를 중심으로 핵심 정보를 정확하고 간결하게 정리한다. 각 장은 제목, 주요 내용, 근거 또는 의미가 자연스럽게 이어지도록 구성하고 과장된 표현은 피한다.`,
-      social:`${core}. 처음 보는 사람도 쉽게 이해할 수 있도록 친근하고 자연스러운 문장으로 풀어낸다. 첫 장에는 궁금증을 만드는 제목을 사용하고, 각 장은 한 가지 메시지만 짧고 명확하게 전달한다.`,
-      bold:`${core}. 핵심 메시지만 남겨 짧고 강한 카피로 구성한다. 첫 장은 한 문장으로 시선을 잡고, 이후 카드는 강한 소제목과 두세 줄의 설명으로 빠르게 읽히게 만든다.`,
-      warm:`${core}. 정보만 나열하지 않고 사람과 현장의 온도가 느껴지는 흐름으로 구성한다. 부드럽고 진정성 있는 표현을 사용하며, 마지막 장에는 기억에 남는 여운을 더한다.`
+    const toneWordMap={
+      premium:[
+        [/있어\s*보이게/g,"세련되게"],
+        [/예쁘게/g,"정돈되고 세련되게"],
+        [/멋있게/g,"완성도 높게"]
+      ],
+      press:[
+        [/부드럽게/g,"간결하고 명확하게"],
+        [/쉽게/g,"명확하게"]
+      ],
+      social:[
+        [/딱딱하지\s*않게/g,"친근하고 자연스럽게"],
+        [/어렵지\s*않게/g,"쉽고 자연스럽게"]
+      ],
+      bold:[
+        [/길지\s*않게/g,"짧고 강하게"],
+        [/간단하게/g,"짧고 명확하게"]
+      ],
+      warm:[
+        [/친근하게/g,"따뜻하고 자연스럽게"],
+        [/부드럽게/g,"따뜻하고 부드럽게"]
+      ]
     };
-    els.direction.value=recipes[tone];
+
+    let polished=input
+      .replace(/\r\n?/g,"\n")
+      .split("\n")
+      .map(line=>line
+        .trim()
+        .replace(/[ \t]+/g," ")
+        .replace(/\s+([,.!?])/g,"$1")
+        .replace(/([,.!?]){2,}/g,"$1")
+        .replace(/ai/gi,"AI")
+        .replace(/해\s*줘/g,"해주세요")
+        .replace(/만들어\s*줘/g,"만들어주세요")
+        .replace(/써\s*줘/g,"작성해주세요")
+        .replace(/보여\s*줘/g,"보여주세요")
+        .replace(/알려\s*줘/g,"알려주세요")
+        .replace(/정리해\s*줘/g,"정리해주세요")
+        .replace(/해야합니다/g,"해야 합니다")
+        .replace(/해야돼/g,"해야 합니다")
+        .replace(/하고싶/g,"하고 싶")
+      )
+      .filter(Boolean)
+      .join("\n");
+
+    for(const [pattern,value] of (toneWordMap[tone]||[])) polished=polished.replace(pattern,value);
+
+    // 문장의 핵심 내용은 그대로 두고 반복되는 조사/표현만 정리합니다.
+    polished=polished
+      .replace(/내용을를/g,"내용을")
+      .replace(/([은는이가을를])\1+/g,"$1")
+      .replace(/\s+$/gm,"")
+      .trim();
+
+    if(polished===input){
+      toast("문장 내용은 유지하고 띄어쓰기와 표현을 정리했습니다");
+    }else{
+      toast("입력한 내용을 유지하면서 문장을 다듬었습니다");
+    }
+    els.direction.value=polished;
     $("#restoreDirection").hidden=false;
-    toast("문장을 더 있어 보이게 다듬었습니다");
     saveDraft();
   }
   function restoreDirection(){
