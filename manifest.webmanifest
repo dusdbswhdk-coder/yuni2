@@ -1,0 +1,9 @@
+{
+  "name": "카드뉴스 스튜디오",
+  "short_name": "카드뉴스",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f1ec",
+  "theme_color": "#191714",
+  "icons": []
+}

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#191714" />
+  <meta name="description" content="사진과 방향성을 넣어 편집 가능한 카드뉴스를 자동 구성하는 제작 도구" />
+  <title>제이비 스튜디오</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23191714'/%3E%3Crect x='15' y='13' width='30' height='38' rx='4' fill='%23fff'/%3E%3Cpath d='M22 24h16M22 31h12M22 38h16' stroke='%23ee5b2b' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark bee-mark"><img src="./bee-mascot.png" alt="제이비 스튜디오 벌 캐릭터"></span>
+      <div><strong>제이비 스튜디오</strong><small>카드뉴스 제작 스튜디오</small></div>
+    </div>
+    <div class="top-actions">
+      <span id="saveState" class="save-state">이 기기에 자동 저장</span>
+      <button class="button ghost" id="undoBtn" title="실행 취소">↶ <span>실행 취소</span></button>
+      <button class="button primary" id="downloadAllBtn">전체 ZIP 저장</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="setup-panel panel">
+      <div class="panel-title"><span>01</span><div><strong>자료와 방향</strong><small>사진과 만들고 싶은 내용을 넣으세요</small></div></div>
+
+      <label class="field-label" for="imageInput">원본 이미지</label>
+      <label class="dropzone" id="dropzone">
+        <input id="imageInput" type="file" accept="image/*" multiple hidden />
+        <span class="drop-icon">＋</span>
+        <strong>사진을 선택하거나 끌어놓기</strong>
+        <small>JPG, PNG · 여러 장 가능</small>
+      </label>
+      <div id="imageList" class="image-list"></div>
+
+      <label class="field-label" for="directionInput">원하는 방향</label>
+      <textarea id="directionInput" rows="6" placeholder="예) 신제품 발표 현장을 소개하는 카드뉴스. 전문적이지만 어렵지 않게, 첫 장은 강한 제목으로 만들어줘.">기자간담회 핵심 내용을 쉽고 신뢰감 있게 전달하는 카드뉴스</textarea>
+      <div class="wash-tools">
+        <select id="toneSelect" aria-label="문장 톤">
+          <option value="premium">고급스럽게</option>
+          <option value="press">보도자료 톤</option>
+          <option value="social">친근한 SNS 톤</option>
+          <option value="bold">짧고 강하게</option>
+          <option value="warm">따뜻하고 감성적으로</option>
+        </select>
+        <button id="polishDirection" type="button"><span>✦</span> 문장 다듬기</button>
+      </div>
+      <button id="restoreDirection" class="restore-direction" type="button" hidden>원래 문장으로 되돌리기</button>
+
+      <div class="count-section">
+        <div class="count-heading"><span>만들 카드 장수</span><small>5장 추천</small></div>
+        <input id="cardCount" type="hidden" value="5" />
+        <div class="count-tabs" role="group" aria-label="만들 카드 장수">
+          <button type="button" data-count="1">1장</button>
+          <button type="button" data-count="3">3장</button>
+          <button type="button" data-count="5" class="active">5장</button>
+          <button type="button" data-count="7">7장</button>
+          <button type="button" data-count="10">10장</button>
+        </div>
+      </div>
+      <div class="ratio-field">
+        <label for="ratioSelect">출력 비율</label>
+        <select id="ratioSelect"><option value="4:5" selected>인스타 피드 4:5</option><option value="1:1">정사각형 1:1</option><option value="9:16">스토리·릴스 9:16</option></select>
+      </div>
+
+      <label class="field-label" for="referenceInput">디자인 레퍼런스 <em>선택</em></label>
+      <label class="reference-box" id="referenceBox">
+        <input id="referenceInput" type="file" accept="image/*" hidden />
+        <span id="referenceText">레퍼런스 이미지 추가</span>
+        <img id="referencePreview" alt="" hidden />
+      </label>
+
+      <button id="generateBtn" class="button generate"><img class="button-bee" src="./bee-mascot.png" alt=""> 다듬은 내용으로 카드뉴스 구성</button>
+      <p class="privacy-note">사진은 이 브라우저 안에서만 처리됩니다.</p>
+    </aside>
+
+    <section class="editor-panel">
+      <div class="editor-toolbar">
+        <div class="step-title"><span>02</span><div><strong>카드 편집</strong><small>글자를 클릭해 바로 수정하세요</small></div></div>
+        <div class="zoom-group">
+          <button id="zoomOut" aria-label="축소">−</button><span id="zoomValue">70%</span><button id="zoomIn" aria-label="확대">＋</button>
+        </div>
+      </div>
+      <div class="stage-wrap" id="stageWrap">
+        <div id="stageScaler" class="stage-scaler">
+          <div id="cardStage" class="card-stage" aria-label="카드 편집 화면">
+            <div class="empty-stage" id="emptyStage">
+              <img class="empty-bee" src="./bee-mascot.png" alt=""><strong>사진을 넣고 자동 구성을 눌러주세요</strong><small>생성 후 제목과 본문을 클릭해서 수정할 수 있습니다.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-strip">
+        <button id="prevPage" class="strip-nav" aria-label="이전 카드">‹</button>
+        <div id="thumbnails" class="thumbnails"></div>
+        <button id="addPage" class="add-page" title="카드 추가">＋</button>
+        <button id="nextPage" class="strip-nav" aria-label="다음 카드">›</button>
+      </div>
+    </section>
+
+    <aside class="style-panel panel">
+      <div class="panel-title"><span>03</span><div><strong>스타일</strong><small id="selectionLabel">텍스트를 선택하세요</small></div></div>
+
+      <div class="style-section">
+        <h3>템플릿</h3>
+        <div class="template-grid">
+          <button class="template active" data-template="editorial"><i class="t-editorial"></i><span>에디토리얼</span></button>
+          <button class="template" data-template="bold"><i class="t-bold"></i><span>볼드</span></button>
+          <button class="template" data-template="clean"><i class="t-clean"></i><span>클린</span></button>
+        </div>
+      </div>
+
+      <div class="style-section" id="textControls">
+        <h3>선택한 글자</h3>
+        <label class="control-label">글꼴
+          <select id="fontFamily">
+            <option value="Pretendard, Arial, sans-serif">고딕</option>
+            <option value="Georgia, 'Noto Serif KR', serif">명조</option>
+            <option value="'Arial Black', Pretendard, sans-serif">강조 고딕</option>
+          </select>
+        </label>
+        <button id="loadLocalFonts" class="local-font-button" type="button">내 PC 폰트 불러오기</button>
+        <p id="localFontStatus" class="local-font-status">산돌구름에서 사용할 폰트를 활성화한 뒤 눌러주세요.</p>
+        <div class="split-fields">
+          <label><span>크기</span><input id="fontSize" type="number" min="18" max="160" value="64" /></label>
+          <label><span>굵기</span><select id="fontWeight"><option value="400">보통</option><option value="600">굵게</option><option value="800">매우 굵게</option></select></label>
+        </div>
+        <div class="color-row">
+          <label><span>글자색</span><input id="fontColor" type="color" value="#ffffff" /></label>
+          <div class="align-buttons" role="group" aria-label="정렬">
+            <button data-align="left" class="active">≡</button><button data-align="center">≡</button><button data-align="right">≡</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="style-section">
+        <h3>사진과 배경</h3>
+        <label class="control-label">사진 확대 <input id="imageZoom" type="range" min="100" max="200" value="100" /></label>
+        <label class="control-label">어둡기 <input id="overlayStrength" type="range" min="0" max="80" value="34" /></label>
+        <label class="control-label">강조색 <input id="accentColor" type="color" value="#ee5b2b" /></label>
+      </div>
+
+      <div class="style-section page-actions">
+        <button id="duplicatePage" class="button ghost">카드 복제</button>
+        <button id="deletePage" class="button danger">삭제</button>
+      </div>
+      <button id="downloadPageBtn" class="button outline">현재 카드 PNG 저장</button>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+(() => {
+  const $ = (q) => document.querySelector(q);
+  const $$ = (q) => [...document.querySelectorAll(q)];
+  const BASE = { w: 1080, h: 1350 };
+  const TEMPLATES = {
+    editorial: { accent:"#ee5b2b", overlay:38, title:{x:78,y:760,w:900,size:82,weight:800,color:"#ffffff",align:"left",font:"Georgia, 'Noto Serif KR', serif"}, body:{x:82,y:1015,w:850,size:34,weight:400,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"}, eyebrow:{x:82,y:105,w:700,size:24,weight:700,color:"#ff7548",align:"left",font:"Pretendard, Arial, sans-serif"} },
+    bold: { accent:"#ff5b25", overlay:52, title:{x:64,y:120,w:940,size:94,weight:800,color:"#ffffff",align:"left",font:"'Arial Black', Pretendard, sans-serif"}, body:{x:68,y:1040,w:860,size:32,weight:600,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"}, eyebrow:{x:68,y:75,w:760,size:23,weight:700,color:"#ff6b38",align:"left",font:"Pretendard, Arial, sans-serif"} },
+    clean: { accent:"#151515", overlay:18, title:{x:72,y:860,w:930,size:74,weight:600,color:"#171717",align:"left",font:"Georgia, 'Noto Serif KR', serif"}, body:{x:76,y:1080,w:850,size:30,weight:400,color:"#272727",align:"left",font:"Pretendard, Arial, sans-serif"}, eyebrow:{x:76,y:820,w:700,size:22,weight:700,color:"#ee5b2b",align:"left",font:"Pretendard, Arial, sans-serif"} }
+  };
+  const state = {
+    images: [], reference:null, cards:[], active:0, selected:"title", template:"editorial",
+    ratio:"4:5", zoom:.7, history:[], dragging:null, originalDirection:null
+  };
+  const els = {
+    stage:$("#cardStage"), empty:$("#emptyStage"), thumbs:$("#thumbnails"), imageList:$("#imageList"),
+    direction:$("#directionInput"), count:$("#cardCount"), ratio:$("#ratioSelect"), toast:$("#toast"),
+    selection:$("#selectionLabel"), zoomValue:$("#zoomValue")
+  };
+
+  const uid = () => Math.random().toString(36).slice(2,9);
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const activeCard = () => state.cards[state.active];
+  const toast = (msg) => { els.toast.textContent=msg; els.toast.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>els.toast.classList.remove("show"),1800); };
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+  const saveDraft = () => {
+    try {
+      const clean={...state,images:state.images.slice(0,10),history:[],dragging:null};
+      localStorage.setItem("cardnews-draft",JSON.stringify(clean));
+      $("#saveState").textContent="저장됨";
+      setTimeout(()=>$("#saveState").textContent="이 기기에 자동 저장",1200);
+    } catch { $("#saveState").textContent="용량이 커서 자동 저장 안 됨"; }
+  };
+  const remember = () => {
+    if(!state.cards.length) return;
+    state.history.push(JSON.stringify({cards:state.cards,active:state.active}));
+    if(state.history.length>30) state.history.shift();
+  };
+  const undo = () => {
+    const h=state.history.pop(); if(!h){toast("되돌릴 내용이 없습니다");return;}
+    const v=JSON.parse(h); state.cards=v.cards; state.active=Math.min(v.active,state.cards.length-1); render(); saveDraft();
+  };
+
+  async function filesToImages(files){
+    const list=[...files].filter(f=>f.type.startsWith("image/"));
+    for(const file of list){
+      const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+      state.images.push({id:uid(),name:file.name,data});
+    }
+    renderImageList(); toast(`${list.length}장의 사진을 추가했습니다`);
+  }
+  function renderImageList(){
+    els.imageList.innerHTML=state.images.map((im,i)=>`<div class="image-chip"><img src="${im.data}" alt="${escapeHtml(im.name)}"><button data-remove-image="${i}" aria-label="삭제">×</button></div>`).join("");
+  }
+  function getThemeSample(){
+    if(!state.reference) return Promise.resolve(null);
+    return new Promise(resolve=>{
+      const img=new Image(); img.onload=()=>{
+        const c=document.createElement("canvas"); c.width=c.height=20; const x=c.getContext("2d"); x.drawImage(img,0,0,20,20);
+        const d=x.getImageData(0,0,20,20).data; let r=0,g=0,b=0,n=0;
+        for(let i=0;i<d.length;i+=16){r+=d[i];g+=d[i+1];b+=d[i+2];n++;}
+        resolve(`#${[r/n,g/n,b/n].map(v=>Math.round(v).toString(16).padStart(2,"0")).join("")}`);
+      }; img.onerror=()=>resolve(null); img.src=state.reference;
+    });
+  }
+  function smartCopy(direction,count){
+    const raw=direction.trim()||"핵심 내용을 전하는 카드뉴스";
+    const first=raw.split(/[.!?。\n]/).map(v=>v.trim()).find(Boolean)||raw;
+    let topic=first
+      .replace(/(카드뉴스|콘텐츠|이미지|사진)(를|으로|로)?/g,"")
+      .replace(/(만들어|제작해|구성해|소개해|전달해|정리해)?\s*(줘|주세요|주기|보여줘)/g,"")
+      .replace(/(고급스럽게|친근하게|전문적으로|예쁘게|짧고\s*강하게|있어\s*보이게)/g,"")
+      .replace(/\s+/g," ").replace(/^[,·\s]+|[,·\s]+$/g,"").trim();
+    if(topic.length>26) topic=topic.slice(0,26).trim();
+    if(!topic) topic="지금 주목해야 할 이야기";
+    const isEvent=/행사|간담회|발표|현장|세미나|전시|박람회|촬영/.test(raw);
+    const isProduct=/제품|신제품|브랜드|출시|기술|서비스/.test(raw);
+    const isInterview=/인터뷰|사람|인물|대표|전문가|이야기/.test(raw);
+    const isGuide=/방법|팁|노하우|가이드|사용법|해야/.test(raw);
+    let story;
+    if(isEvent) story=[
+      ["SCENE · 01","현장에서 시작된\n새로운 이야기",`${topic}, 그날의 핵심 장면과 메시지를 한눈에 만나보세요.`],
+      ["WHY IT MATTERS · 02","왜 지금\n주목해야 할까",`이번 현장이 던진 의미와 사람들이 주목한 이유를 짚어봅니다.`],
+      ["KEY MOMENT · 03","사진으로 만나는\n결정적 순간",`말보다 선명했던 현장의 분위기와 주요 장면을 골라 담았습니다.`],
+      ["POINT · 04","핵심만 빠르게\n정리했습니다",`복잡한 내용은 덜어내고 꼭 알아야 할 메시지만 간결하게 전합니다.`],
+      ["NEXT · 05","이 변화가\n이어질 곳",`${topic} 이후 기대되는 다음 흐름을 함께 살펴봅니다.`],
+      ["BEHIND · 06","장면 뒤에 담긴\n진짜 의미",`눈에 보이는 결과 너머, 이번 이야기가 남긴 의미를 정리했습니다.`],
+      ["SUMMARY · 07","오늘의 핵심을\n한 문장으로",`${topic}, 지금 기억해야 할 메시지는 분명합니다.`]
+    ]; else if(isProduct) story=[
+      ["NEW STANDARD · 01","새로운 기준을\n제안하다",`${topic}의 핵심 가치와 달라진 경험을 소개합니다.`],
+      ["WHY · 02","왜 달라야\n했을까",`사용자의 고민에서 출발한 변화의 이유를 짚어봅니다.`],
+      ["FEATURE · 03","차이를 만드는\n핵심 포인트",`한눈에 알아볼 수 있도록 주요 특징을 간결하게 정리했습니다.`],
+      ["EXPERIENCE · 04","기능을 넘어\n경험으로",`실제로 사용했을 때 체감할 수 있는 가치를 살펴봅니다.`],
+      ["VALUE · 05","선택해야 할\n이유는 분명합니다",`${topic}이 제안하는 새로운 가능성을 확인해보세요.`],
+      ["DETAIL · 06","작은 디테일이\n만드는 큰 차이",`완성도를 높이는 세심한 요소들을 사진과 함께 소개합니다.`],
+      ["SUMMARY · 07","한눈에 보는\n핵심 정리",`${topic}의 중요한 포인트만 다시 모았습니다.`]
+    ]; else if(isInterview) story=[
+      ["PORTRAIT · 01","한 사람에게서\n시작된 이야기",`${topic}에 담긴 생각과 진솔한 목소리를 전합니다.`],
+      ["BEGINNING · 02","모든 것에는\n시작이 있습니다",`지금의 이야기가 시작된 배경과 계기를 들어봤습니다.`],
+      ["INSIGHT · 03","경험이 만든\n단단한 시선",`시간을 지나며 얻은 생각과 중요한 깨달음을 정리했습니다.`],
+      ["MESSAGE · 04","가장 전하고\n싶었던 말",`인터뷰 속에서 놓치지 말아야 할 핵심 메시지를 담았습니다.`],
+      ["EPILOGUE · 05","이야기는 계속됩니다",`${topic}, 앞으로 이어질 다음 장면을 기대해봅니다.`],
+      ["QUOTE · 06","오래 남는\n한마디",`수많은 이야기 가운데 가장 기억하고 싶은 문장을 담아보세요.`],
+      ["SUMMARY · 07","사람과 생각을\n한눈에",`이번 이야기의 흐름과 의미를 짧게 되짚어봅니다.`]
+    ]; else if(isGuide) story=[
+      ["GUIDE · 01","복잡한 내용도\n한 번에 이해하기",`${topic}, 꼭 필요한 내용만 쉽게 정리했습니다.`],
+      ["CHECK · 02","시작 전에\n먼저 확인하세요",`놓치기 쉬운 조건과 준비 사항부터 차근차근 살펴봅니다.`],
+      ["STEP · 03","핵심은\n이 순서입니다",`실제로 따라 하기 쉽도록 중요한 과정을 나눠 설명합니다.`],
+      ["TIP · 04","결과를 바꾸는\n작은 차이",`알아두면 도움이 되는 실무 팁과 주의점을 함께 정리했습니다.`],
+      ["SUMMARY · 05","이것만 기억하면\n충분합니다",`${topic}의 핵심을 마지막으로 한 번 더 확인하세요.`]
+    ]; else story=[
+      ["ISSUE BRIEF · 01","지금 주목해야 할\n이야기",`${topic}, 핵심부터 차분하게 살펴봅니다.`],
+      ["CONTEXT · 02","먼저 배경부터\n짚어봅니다",`이 이야기가 시작된 이유와 흐름을 알기 쉽게 정리했습니다.`],
+      ["KEY POINT · 03","핵심은\n바로 이것입니다",`여러 내용 가운데 꼭 알아야 할 포인트만 골라 담았습니다.`],
+      ["VIEW · 04","사진 속에서\n읽는 변화",`장면마다 담긴 의미와 주목할 부분을 함께 살펴보세요.`],
+      ["SUMMARY · 05","한눈에 보는\n오늘의 결론",`${topic}, 마지막으로 기억해야 할 내용을 정리했습니다.`],
+      ["DETAIL · 06","놓치기 쉬운\n한 가지",`조금 더 자세히 보면 이 이야기를 이해하는 단서가 보입니다.`],
+      ["NEXT · 07","다음 이야기를\n기대해 주세요",`지금의 흐름이 앞으로 어떻게 이어질지 주목해보세요.`]
+    ];
+    const cards=[];
+    for(let i=0;i<count;i++){
+      const src=story[i%story.length];
+      cards.push({eyebrow:src[0].replace(/\d+$/,String(i+1).padStart(2,"0")),title:src[1],body:src[2]});
+    }
+    return cards;
+  }
+  function polishDirection(){
+    const input=els.direction.value.trim();
+    if(!input){toast("원하는 방향을 간단히 적어주세요");els.direction.focus();return;}
+    if(!state.originalDirection) state.originalDirection=input;
+    const tone=$("#toneSelect").value;
+    let core=input
+      .replace(/(대충|그냥|좀|약간|뭔가|알아서|예쁘게|있어\s*보이게)/g,"")
+      .replace(/(만들어\s*줘|해\s*줘|해주세요|해줘)/g,"")
+      .replace(/\s+/g," ").replace(/^[,。.\s]+|[,。.\s]+$/g,"").trim();
+    if(!core) core=input;
+    const subject=/행사|간담회|발표|현장/.test(core)?"현장의 핵심 메시지와 분위기":/제품|신제품|브랜드/.test(core)?"제품의 핵심 가치와 차별점":/인터뷰|사람|인물/.test(core)?"인물의 이야기와 핵심 메시지":"핵심 내용을";
+    const recipes={
+      premium:`${core}. ${subject}를 세련된 에디토리얼 구성으로 전달한다. 절제된 문장과 명확한 정보 위계를 사용하고, 첫 장은 시선을 끄는 헤드라인으로 시작한다. 전체적으로 전문성과 신뢰감이 느껴지도록 구성한다.`,
+      press:`${core}. 사실관계를 중심으로 핵심 정보를 정확하고 간결하게 정리한다. 각 장은 제목, 주요 내용, 근거 또는 의미가 자연스럽게 이어지도록 구성하고 과장된 표현은 피한다.`,
+      social:`${core}. 처음 보는 사람도 쉽게 이해할 수 있도록 친근하고 자연스러운 문장으로 풀어낸다. 첫 장에는 궁금증을 만드는 제목을 사용하고, 각 장은 한 가지 메시지만 짧고 명확하게 전달한다.`,
+      bold:`${core}. 핵심 메시지만 남겨 짧고 강한 카피로 구성한다. 첫 장은 한 문장으로 시선을 잡고, 이후 카드는 강한 소제목과 두세 줄의 설명으로 빠르게 읽히게 만든다.`,
+      warm:`${core}. 정보만 나열하지 않고 사람과 현장의 온도가 느껴지는 흐름으로 구성한다. 부드럽고 진정성 있는 표현을 사용하며, 마지막 장에는 기억에 남는 여운을 더한다.`
+    };
+    els.direction.value=recipes[tone];
+    $("#restoreDirection").hidden=false;
+    toast("문장을 더 있어 보이게 다듬었습니다");
+    saveDraft();
+  }
+  function restoreDirection(){
+    if(!state.originalDirection)return;
+    els.direction.value=state.originalDirection;state.originalDirection=null;$("#restoreDirection").hidden=true;
+    toast("원래 문장으로 되돌렸습니다");
+  }
+  async function generate(){
+    if(!state.images.length){toast("원본 이미지를 먼저 넣어주세요"); $("#imageInput").click(); return;}
+    remember();
+    const count=Number(els.count.value); const copy=smartCopy(els.direction.value,count);
+    const refColor=await getThemeSample(); const template=TEMPLATES[state.template];
+    state.cards=copy.map((c,i)=>({
+      id:uid(), image:state.images[i%state.images.length].data, name:state.images[i%state.images.length].name,
+      template:state.template, overlay:template.overlay, imageZoom:100, accent:refColor||template.accent,
+      layers:{
+        eyebrow:{...clone(template.eyebrow),text:c.eyebrow},
+        title:{...clone(template.title),text:c.title},
+        body:{...clone(template.body),text:c.body}
+      }
+    }));
+    state.active=0; state.selected="title"; render(); saveDraft(); toast("입력 문장을 후킹 제목과 카드 흐름으로 다시 구성했습니다");
+  }
+  function ratioSize(){
+    if(state.ratio==="1:1") return {w:1080,h:1080};
+    if(state.ratio==="9:16") return {w:1080,h:1920};
+    return BASE;
+  }
+  function stageDisplaySize(){
+    const r=ratioSize(), width=432; return {w:width,h:Math.round(width*r.h/r.w),scale:width/r.w};
+  }
+  function render(){
+    const card=activeCard(); const ds=stageDisplaySize();
+    els.stage.style.width=ds.w+"px"; els.stage.style.height=ds.h+"px";
+    if(!card){els.stage.innerHTML="";els.stage.appendChild(els.empty);els.empty.hidden=false;els.thumbs.innerHTML="";syncControls();return;}
+    els.empty.hidden=true;
+    const clean=card.template==="clean";
+    els.stage.innerHTML=`
+      <div class="stage-bg" style="background-image:url('${card.image}');transform:scale(${card.imageZoom/100})"></div>
+      <div class="stage-overlay" style="background:${clean?`linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.96) 62%)`:`linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,${card.overlay/100+.25}))`}"></div>
+      ${["eyebrow","title","body"].map(k=>layerHtml(k,card.layers[k],ds.scale)).join("")}
+    `;
+    bindLayers();
+    els.thumbs.innerHTML=state.cards.map((c,i)=>`<button class="thumb ${i===state.active?"active":""}" data-card="${i}"><img src="${c.image}" alt=""><span>${i+1}</span></button>`).join("");
+    syncControls();
+  }
+  function layerHtml(key,l,s){
+    return `<div class="text-layer ${state.selected===key?"selected":""}" data-layer="${key}" tabindex="0" style="left:${l.x*s}px;top:${l.y*s}px;width:${l.w*s}px;font-size:${l.size*s}px;font-weight:${l.weight};color:${l.color};text-align:${l.align};font-family:${l.font}">${escapeHtml(l.text)}</div>`;
+  }
+  function bindLayers(){
+    $$(".text-layer").forEach(el=>{
+      el.addEventListener("pointerdown",e=>{
+        const key=el.dataset.layer; state.selected=key; $$(".text-layer").forEach(x=>x.classList.toggle("selected",x===el));
+        syncControls();
+        if(el.getAttribute("contenteditable")==="true") return;
+        remember(); const l=activeCard().layers[key]; state.dragging={key,sx:e.clientX,sy:e.clientY,x:l.x,y:l.y}; el.setPointerCapture(e.pointerId);
+      });
+      el.addEventListener("pointermove",e=>{
+        if(!state.dragging||state.dragging.key!==el.dataset.layer) return;
+        const ds=stageDisplaySize(); const l=activeCard().layers[state.dragging.key];
+        l.x=Math.max(0,Math.min(ratioSize().w-l.w,state.dragging.x+(e.clientX-state.dragging.sx)/ds.scale));
+        l.y=Math.max(0,Math.min(ratioSize().h-60,state.dragging.y+(e.clientY-state.dragging.sy)/ds.scale));
+        el.style.left=l.x*ds.scale+"px";el.style.top=l.y*ds.scale+"px";
+      });
+      el.addEventListener("pointerup",()=>{if(state.dragging){state.dragging=null;saveDraft();}});
+      el.addEventListener("dblclick",()=>{el.setAttribute("contenteditable","true");el.focus();document.execCommand("selectAll",false,null);});
+      el.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();el.blur();}});
+      el.addEventListener("blur",()=>{if(el.getAttribute("contenteditable")==="true"){activeCard().layers[el.dataset.layer].text=el.innerText.trim();el.removeAttribute("contenteditable");saveDraft();render();}});
+      el.addEventListener("click",()=>{state.selected=el.dataset.layer;syncControls();});
+    });
+  }
+  function syncControls(){
+    const c=activeCard(), l=c?.layers?.[state.selected];
+    els.selection.textContent=l?({title:"제목",body:"본문",eyebrow:"상단 문구"}[state.selected]+" 선택됨"):"텍스트를 선택하세요";
+    if(l){$("#fontFamily").value=l.font;$("#fontSize").value=l.size;$("#fontWeight").value=String(l.weight);$("#fontColor").value=l.color;$$(".align-buttons button").forEach(b=>b.classList.toggle("active",b.dataset.align===l.align));}
+    if(c){$("#imageZoom").value=c.imageZoom;$("#overlayStrength").value=c.overlay;$("#accentColor").value=c.accent;$$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===c.template));}
+    els.zoomValue.textContent=Math.round(state.zoom*100)+"%";
+    $("#stageScaler").style.transform=`scale(${state.zoom/.7})`;
+  }
+  function updateLayer(prop,value){
+    const c=activeCard(); if(!c)return; remember(); c.layers[state.selected][prop]=value; render();saveDraft();
+  }
+  async function loadLocalFonts(){
+    const status=$("#localFontStatus"), button=$("#loadLocalFonts");
+    if(!("queryLocalFonts" in window)){
+      status.textContent="이 기능은 PC용 Chrome 또는 Edge에서 사용할 수 있습니다.";
+      status.className="local-font-status error";
+      return;
+    }
+    try{
+      button.disabled=true;button.textContent="폰트 확인 중…";
+      const fonts=await window.queryLocalFonts();
+      const families=[...new Set(fonts.map(f=>f.family).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ko"));
+      const sandoll=families.filter(n=>/sandoll|산돌|호요요|sd\s/i.test(n));
+      const others=families.filter(n=>!sandoll.includes(n));
+      const select=$("#fontFamily");
+      select.querySelectorAll("optgroup[data-local]").forEach(g=>g.remove());
+      const addGroup=(label,items)=>{
+        if(!items.length)return;
+        const group=document.createElement("optgroup");group.label=label;group.dataset.local="true";
+        items.forEach(name=>{const option=document.createElement("option");option.value=`"${name}", sans-serif`;option.textContent=name;group.appendChild(option);});
+        select.appendChild(group);
+      };
+      addGroup(`산돌 폰트 (${sandoll.length})`,sandoll);
+      addGroup(`내 PC 폰트 (${others.length})`,others);
+      status.textContent=sandoll.length?`산돌 폰트 ${sandoll.length}개를 포함해 총 ${families.length}개를 불러왔습니다.`:`총 ${families.length}개를 불러왔습니다. 산돌구름에서 폰트를 먼저 활성화하면 산돌 폰트도 표시됩니다.`;
+      status.className="local-font-status success";
+      button.textContent="폰트 목록 새로고침";
+      toast("내 PC 폰트를 불러왔습니다");
+    }catch(err){
+      status.textContent=err?.name==="NotAllowedError"?"폰트 접근을 허용해야 목록을 불러올 수 있습니다.":"폰트 목록을 불러오지 못했습니다.";
+      status.className="local-font-status error";button.textContent="다시 불러오기";
+    }finally{button.disabled=false;}
+  }
+  function applyTemplate(name){
+    const c=activeCard();if(!c){state.template=name;$$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));return;}
+    remember();const t=TEMPLATES[name];c.template=name;c.overlay=t.overlay;c.accent=t.accent;
+    for(const k of ["eyebrow","title","body"]){const text=c.layers[k].text;c.layers[k]={...clone(t[k]),text};}
+    state.template=name;render();saveDraft();
+  }
+  function addPage(){
+    remember(); const prev=activeCard(); const t=TEMPLATES[state.template];
+    state.cards.push(prev?{...clone(prev),id:uid()}:{id:uid(),image:state.images[0]?.data||"",template:state.template,overlay:t.overlay,imageZoom:100,accent:t.accent,layers:{eyebrow:{...clone(t.eyebrow),text:"NEW CARD"},title:{...clone(t.title),text:"새 카드 제목"},body:{...clone(t.body),text:"본문을 입력하세요."}}});
+    state.active=state.cards.length-1;render();saveDraft();
+  }
+  function duplicatePage(){if(!activeCard())return;remember();state.cards.splice(state.active+1,0,{...clone(activeCard()),id:uid()});state.active++;render();saveDraft();toast("카드를 복제했습니다");}
+  function deletePage(){if(!activeCard())return;if(state.cards.length===1){toast("카드는 한 장 이상 필요합니다");return;}remember();state.cards.splice(state.active,1);state.active=Math.max(0,state.active-1);render();saveDraft();}
+
+  function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
+  function wrapLines(ctx,text,maxWidth){
+    const paragraphs=String(text).split("\n"), lines=[];
+    for(const p of paragraphs){let line="";for(const ch of p){const test=line+ch;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=ch;}else line=test;}lines.push(line||" ");}
+    return lines;
+  }
+  async function cardToBlob(card){
+    const sz=ratioSize(), canvas=document.createElement("canvas");canvas.width=sz.w;canvas.height=sz.h;const ctx=canvas.getContext("2d");
+    const img=await loadImage(card.image); const scale=Math.max(sz.w/img.width,sz.h/img.height)*(card.imageZoom/100);const w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(sz.w-w)/2,(sz.h-h)/2,w,h);
+    const grad=ctx.createLinearGradient(0,0,0,sz.h); if(card.template==="clean"){grad.addColorStop(0,"rgba(255,255,255,0)");grad.addColorStop(.58,"rgba(255,255,255,0)");grad.addColorStop(1,"rgba(255,255,255,.98)");}else{grad.addColorStop(0,"rgba(0,0,0,.08)");grad.addColorStop(1,`rgba(0,0,0,${Math.min(.9,card.overlay/100+.25)})`);}ctx.fillStyle=grad;ctx.fillRect(0,0,sz.w,sz.h);
+    ctx.fillStyle=card.accent;ctx.fillRect(0,0,14,sz.h);
+    for(const key of ["eyebrow","title","body"]){const l=card.layers[key];ctx.save();ctx.fillStyle=l.color;ctx.font=`${l.weight} ${l.size}px ${l.font}`;ctx.textAlign=l.align;ctx.textBaseline="top";const lines=wrapLines(ctx,l.text,l.w);const x=l.align==="center"?l.x+l.w/2:l.align==="right"?l.x+l.w:l.x;lines.forEach((line,i)=>ctx.fillText(line,x,l.y+i*l.size*1.22));ctx.restore();}
+    return new Promise(res=>canvas.toBlob(res,"image/png",1));
+  }
+  async function downloadCurrent(){
+    const c=activeCard();if(!c)return;toast("PNG를 만드는 중입니다");const b=await cardToBlob(c);downloadBlob(b,`cardnews-${String(state.active+1).padStart(2,"0")}.png`);
+  }
+  function downloadBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);}
+  const crcTable=(()=>{let t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+  function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0;}
+  function u16(n){return [n&255,(n>>>8)&255]} function u32(n){return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]}
+  function makeZip(files){
+    const enc=new TextEncoder(), local=[], central=[];let offset=0;
+    files.forEach(f=>{const name=enc.encode(f.name),data=f.data,crc=crc32(data);const lh=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...name]);local.push(lh,data);const ch=new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name]);central.push(ch);offset+=lh.length+data.length;});
+    const csize=central.reduce((n,a)=>n+a.length,0);const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(csize),...u32(offset),...u16(0)]);return new Blob([...local,...central,end],{type:"application/zip"});
+  }
+  async function downloadAll(){
+    if(!state.cards.length)return;toast("전체 카드를 ZIP으로 만드는 중입니다");
+    const files=[];for(let i=0;i<state.cards.length;i++){const b=await cardToBlob(state.cards[i]);files.push({name:`cardnews-${String(i+1).padStart(2,"0")}.png`,data:new Uint8Array(await b.arrayBuffer())});}
+    downloadBlob(makeZip(files),"cardnews-all.zip");toast("ZIP 저장을 시작했습니다");
+  }
+
+  $("#imageInput").addEventListener("change",e=>filesToImages(e.target.files));
+  $("#dropzone").addEventListener("dragover",e=>{e.preventDefault();e.currentTarget.classList.add("drag")});
+  $("#dropzone").addEventListener("dragleave",e=>e.currentTarget.classList.remove("drag"));
+  $("#dropzone").addEventListener("drop",e=>{e.preventDefault();e.currentTarget.classList.remove("drag");filesToImages(e.dataTransfer.files)});
+  els.imageList.addEventListener("click",e=>{const i=e.target.dataset.removeImage;if(i!==undefined){state.images.splice(Number(i),1);renderImageList();}});
+  $("#referenceInput").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{state.reference=r.result;$("#referencePreview").src=r.result;$("#referencePreview").hidden=false;$("#referenceText").hidden=true;};r.readAsDataURL(f);});
+  $("#generateBtn").addEventListener("click",generate);$("#undoBtn").addEventListener("click",undo);
+  $$(".count-tabs button").forEach(button=>button.addEventListener("click",()=>{
+    $("#cardCount").value=button.dataset.count;
+    $$(".count-tabs button").forEach(item=>item.classList.toggle("active",item===button));
+  }));
+  $("#polishDirection").addEventListener("click",polishDirection);$("#restoreDirection").addEventListener("click",restoreDirection);
+  $("#fontFamily").addEventListener("change",e=>updateLayer("font",e.target.value));$("#fontSize").addEventListener("change",e=>updateLayer("size",Number(e.target.value)));$("#fontWeight").addEventListener("change",e=>updateLayer("weight",Number(e.target.value)));$("#fontColor").addEventListener("input",e=>updateLayer("color",e.target.value));
+  $("#loadLocalFonts").addEventListener("click",loadLocalFonts);
+  $$(".align-buttons button").forEach(b=>b.addEventListener("click",()=>updateLayer("align",b.dataset.align)));
+  $$(".template").forEach(b=>b.addEventListener("click",()=>applyTemplate(b.dataset.template)));
+  $("#imageZoom").addEventListener("input",e=>{if(activeCard()){activeCard().imageZoom=Number(e.target.value);render();}});
+  $("#overlayStrength").addEventListener("input",e=>{if(activeCard()){activeCard().overlay=Number(e.target.value);render();}});
+  $("#accentColor").addEventListener("input",e=>{if(activeCard()){activeCard().accent=e.target.value;render();}});
+  $("#ratioSelect").addEventListener("change",e=>{state.ratio=e.target.value;render();saveDraft();});
+  els.thumbs.addEventListener("click",e=>{const b=e.target.closest("[data-card]");if(b){state.active=Number(b.dataset.card);render();}});
+  $("#addPage").addEventListener("click",addPage);$("#duplicatePage").addEventListener("click",duplicatePage);$("#deletePage").addEventListener("click",deletePage);
+  $("#prevPage").addEventListener("click",()=>{if(state.cards.length){state.active=(state.active-1+state.cards.length)%state.cards.length;render();}});
+  $("#nextPage").addEventListener("click",()=>{if(state.cards.length){state.active=(state.active+1)%state.cards.length;render();}});
+  $("#zoomOut").addEventListener("click",()=>{state.zoom=Math.max(.4,state.zoom-.1);syncControls();});$("#zoomIn").addEventListener("click",()=>{state.zoom=Math.min(1,state.zoom+.1);syncControls();});
+  $("#downloadPageBtn").addEventListener("click",downloadCurrent);$("#downloadAllBtn").addEventListener("click",downloadAll);
+
+  window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();}});
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
+  render();
+
+  if(document.modelContext?.registerTool){
+    const lifecycle=new AbortController();
+    Promise.resolve(document.modelContext.registerTool({
+      name:"generate_card_news",title:"카드뉴스 자동 구성",description:"현재 입력된 방향성과 업로드된 이미지로 편집 가능한 카드 세트를 구성합니다.",
+      inputSchema:{type:"object",properties:{direction:{type:"string"},count:{type:"integer",minimum:1,maximum:10}},required:["direction"],additionalProperties:false},
+      annotations:{readOnlyHint:false,untrustedContentHint:false},
+      async execute(input){els.direction.value=input.direction;if(input.count){els.count.value=String(input.count);$$(".count-tabs button").forEach(button=>button.classList.toggle("active",button.dataset.count===String(input.count)));}await generate();return{count:state.cards.length,status:"generated"};}
+    },{signal:lifecycle.signal})).catch(()=>{});
+  }
+})();
