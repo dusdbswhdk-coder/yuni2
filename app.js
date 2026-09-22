@@ -245,7 +245,13 @@
       });
       el.addEventListener("pointerup",()=>{if(state.dragging){state.dragging=null;saveDraft();}});
       el.addEventListener("dblclick",()=>{el.setAttribute("contenteditable","true");el.focus();document.execCommand("selectAll",false,null);});
-      el.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();el.blur();}});
+      el.addEventListener("keydown",e=>{
+        if(el.getAttribute("contenteditable")!=="true") return;
+        // Enter/Shift+Enter는 줄바꿈으로 사용합니다.
+        // Ctrl(또는 Cmd)+Enter, Esc로 편집을 끝낼 수 있습니다.
+        if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();el.blur();}
+        else if(e.key==="Escape"){e.preventDefault();el.blur();}
+      });
       el.addEventListener("blur",()=>{if(el.getAttribute("contenteditable")==="true"){const l=getLayer(activeCard(),el.dataset.layer); if(l)l.text=el.innerText.trim();el.removeAttribute("contenteditable");saveDraft();render();}});
       el.addEventListener("click",()=>{state.selected=el.dataset.layer;syncControls();});
     });
@@ -423,7 +429,7 @@
   $("#downloadPageBtn").addEventListener("click",downloadCurrent);$("#downloadAllBtn").addEventListener("click",downloadAll);
 
   window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();}});
-  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-usertextonly1",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-enter1",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
   try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
   render();
 
