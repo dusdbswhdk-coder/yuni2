@@ -7,12 +7,12 @@
     bold:{accent:"#ff5b25",overlay:52,title:{x:64,y:120,w:940,size:94,weight:800,color:"#ffffff",align:"left",font:"'Arial Black', Pretendard, sans-serif"},body:{x:68,y:1040,w:860,size:32,weight:600,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:68,y:75,w:760,size:23,weight:700,color:"#ff6b38",align:"left",font:"Pretendard, Arial, sans-serif"}},
     clean:{accent:"#151515",overlay:18,title:{x:72,y:860,w:930,size:74,weight:600,color:"#171717",align:"left",font:"Georgia, 'Noto Serif KR', serif"},body:{x:76,y:1080,w:850,size:30,weight:400,color:"#272727",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:76,y:820,w:700,size:22,weight:700,color:"#ee5b2b",align:"left",font:"Pretendard, Arial, sans-serif"}},
     corporate:{accent:"#4f83cc",overlay:48,title:{x:72,y:690,w:900,size:76,weight:800,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},body:{x:76,y:1000,w:820,size:30,weight:400,color:"#eaf2ff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:76,y:120,w:720,size:22,weight:700,color:"#8fc0ff",align:"left",font:"Pretendard, Arial, sans-serif"}},
-    press:{accent:"#111827",overlay:28,title:{x:70,y:800,w:930,size:70,weight:800,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},body:{x:74,y:1040,w:860,size:28,weight:400,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:74,y:115,w:760,size:21,weight:700,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"}},
+    press:{accent:"#111827",overlay:24,title:{x:70,y:805,w:930,size:70,weight:800,color:"#111827",align:"left",font:"Pretendard, Arial, sans-serif"},body:{x:74,y:1045,w:860,size:28,weight:400,color:"#374151",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:74,y:115,w:760,size:21,weight:700,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"}},
     product:{accent:"#f4d06f",overlay:46,title:{x:72,y:180,w:900,size:86,weight:800,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},body:{x:76,y:1050,w:840,size:30,weight:500,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:76,y:125,w:720,size:22,weight:800,color:"#f4d06f",align:"left",font:"Pretendard, Arial, sans-serif"}},
     interview:{accent:"#d9a679",overlay:40,title:{x:82,y:720,w:860,size:76,weight:700,color:"#ffffff",align:"left",font:"Georgia, 'Noto Serif KR', serif"},body:{x:86,y:1010,w:820,size:30,weight:400,color:"#fff7ef",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:86,y:130,w:700,size:22,weight:700,color:"#ffd2ad",align:"left",font:"Pretendard, Arial, sans-serif"}},
     stats:{accent:"#ffd43b",overlay:58,title:{x:70,y:250,w:940,size:110,weight:800,color:"#ffffff",align:"left",font:"'Arial Black', Pretendard, sans-serif"},body:{x:76,y:1020,w:840,size:30,weight:600,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:76,y:120,w:700,size:24,weight:800,color:"#ffd43b",align:"left",font:"Pretendard, Arial, sans-serif"}},
     compare:{accent:"#4b82c3",overlay:42,title:{x:70,y:190,w:940,size:76,weight:800,color:"#ffffff",align:"center",font:"Pretendard, Arial, sans-serif"},body:{x:110,y:1040,w:860,size:30,weight:500,color:"#ffffff",align:"center",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:190,y:125,w:700,size:22,weight:700,color:"#9bc5f5",align:"center",font:"Pretendard, Arial, sans-serif"}},
-    checklist:{accent:"#63a375",overlay:34,title:{x:78,y:250,w:900,size:72,weight:800,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},body:{x:82,y:850,w:840,size:34,weight:500,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:82,y:130,w:720,size:22,weight:800,color:"#a9e7b8",align:"left",font:"Pretendard, Arial, sans-serif"}},
+    checklist:{accent:"#63a375",overlay:26,title:{x:78,y:245,w:900,size:72,weight:800,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},body:{x:112,y:900,w:790,size:32,weight:600,color:"#183325",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:82,y:130,w:720,size:22,weight:800,color:"#a9e7b8",align:"left",font:"Pretendard, Arial, sans-serif"}},
     qa:{accent:"#a29bfe",overlay:50,title:{x:70,y:300,w:940,size:92,weight:800,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},body:{x:76,y:1010,w:850,size:30,weight:500,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:76,y:125,w:700,size:24,weight:800,color:"#c9c4ff",align:"left",font:"Pretendard, Arial, sans-serif"}},
     event:{accent:"#ffd93d",overlay:44,title:{x:70,y:650,w:940,size:88,weight:800,color:"#ffffff",align:"left",font:"'Arial Black', Pretendard, sans-serif"},body:{x:76,y:1030,w:850,size:31,weight:600,color:"#ffffff",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:76,y:120,w:700,size:24,weight:800,color:"#ffd93d",align:"left",font:"Pretendard, Arial, sans-serif"}},
     premium:{accent:"#c9a85c",overlay:55,title:{x:90,y:690,w:900,size:78,weight:600,color:"#ffffff",align:"left",font:"Georgia, 'Noto Serif KR', serif"},body:{x:94,y:1010,w:820,size:28,weight:400,color:"#f6f0df",align:"left",font:"Pretendard, Arial, sans-serif"},eyebrow:{x:94,y:130,w:700,size:21,weight:700,color:"#d8bd7a",align:"left",font:"Pretendard, Arial, sans-serif"}},
@@ -187,15 +187,53 @@
   function stageDisplaySize(){
     const r=ratioSize(), width=432; return {w:width,h:Math.round(width*r.h/r.w),scale:width/r.w};
   }
+  function templateOverlay(card){
+    const a=Math.min(.9,card.overlay/100+.25);
+    const map={
+      clean:"linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.96) 62%)",
+      corporate:"linear-gradient(90deg,rgba(6,25,50,.18),rgba(6,25,50,.72))",
+      press:"linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.22) 57%,rgba(255,255,255,0) 58%)",
+      product:"linear-gradient(180deg,rgba(8,12,20,.42),rgba(8,12,20,.72))",
+      interview:"linear-gradient(90deg,rgba(40,20,8,.2),rgba(20,10,4,.62))",
+      stats:"linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,.72))",
+      compare:"linear-gradient(90deg,rgba(255,255,255,.10) 0 50%,rgba(0,0,0,.48) 50% 100%)",
+      checklist:"linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.48) 58%,rgba(255,255,255,0) 59%)",
+      qa:"linear-gradient(145deg,rgba(30,20,70,.28),rgba(30,20,70,.72))",
+      event:"linear-gradient(180deg,rgba(65,15,5,.18),rgba(65,15,5,.68))",
+      premium:"linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,.78))",
+      quote:"linear-gradient(180deg,rgba(35,25,20,.22),rgba(35,25,20,.64))",
+      magazine:"linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.68))"
+    };
+    return map[card.template]||`linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,${a}))`;
+  }
+  function templateDecorHtml(card,s){
+    const A=card.accent;
+    const box=(cls,x,y,w,h,style="")=>`<div class="template-decor ${cls}" style="left:${x*s}px;top:${y*s}px;width:${w*s}px;height:${h*s}px;${style}"></div>`;
+    switch(card.template){
+      case "corporate": return box("decor-panel",700,0,380,1350,`background:${A};opacity:.24`)+box("decor-line",72,642,260,8,`background:${A}`);
+      case "press": return box("decor-paper",0,770,1080,580,"background:rgba(255,255,255,.96)")+box("decor-line",70,770,220,10,`background:${A}`);
+      case "product": return box("decor-circle",760,110,220,220,`background:${A};border-radius:50%;opacity:.92`)+box("decor-panel",0,1160,1080,190,"background:rgba(8,12,20,.78)");
+      case "interview": return box("decor-panel",0,0,175,1350,`background:${A};opacity:.5`)+`<div class="template-decor decor-symbol" style="left:${720*s}px;top:${500*s}px;font-size:${220*s}px;color:${A};opacity:.72">“</div>`;
+      case "stats": return box("decor-panel",0,155,1080,365,`background:${A};opacity:.92`)+`<div class="template-decor decor-symbol" style="right:${55*s}px;top:${170*s}px;font-size:${80*s}px;color:#111;font-weight:900">%</div>`;
+      case "compare": return box("decor-panel",0,480,535,520,"background:rgba(255,255,255,.18);border-right:2px solid rgba(255,255,255,.8)")+box("decor-panel",545,480,535,520,"background:rgba(5,18,38,.25)");
+      case "checklist": return box("decor-paper",55,810,970,455,"background:rgba(255,255,255,.95);border-radius:28px")+[0,1,2].map(i=>box("decor-check",92,870+i*100,42,42,`border:4px solid ${A};border-radius:8px`)).join("");
+      case "qa": return `<div class="template-decor decor-badge" style="left:${65*s}px;top:${535*s}px;width:${150*s}px;height:${150*s}px;background:${A};font-size:${88*s}px">Q</div><div class="template-decor decor-badge" style="right:${70*s}px;top:${790*s}px;width:${120*s}px;height:${120*s}px;background:#fff;color:#5d4fd2;font-size:${68*s}px">A</div>`;
+      case "event": return box("decor-ribbon",700,-120,230,600,`background:${A};transform:rotate(35deg);opacity:.86`)+box("decor-frame",42,42,996,1266,`border:5px solid ${A};border-radius:24px`);
+      case "premium": return box("decor-frame",48,48,984,1254,`border:3px solid ${A};border-radius:6px`)+box("decor-line",90,650,180,3,`background:${A}`);
+      case "quote": return `<div class="template-decor decor-symbol" style="left:${70*s}px;top:${280*s}px;font-size:${300*s}px;color:${A};opacity:.8">“</div>`+box("decor-line",390,930,300,3,`background:${A}`);
+      case "magazine": return box("decor-panel",0,0,1080,86,`background:${A};opacity:.94`)+box("decor-frame",38,105,1004,1190,"border:3px solid rgba(255,255,255,.75)")+ `<div class="template-decor decor-kicker" style="right:${55*s}px;top:${28*s}px;font-size:${22*s}px">JB MAGAZINE</div>`;
+      default:return "";
+    }
+  }
   function render(){
     const card=activeCard(); const ds=stageDisplaySize();
     els.stage.style.width=ds.w+"px"; els.stage.style.height=ds.h+"px";
     if(!card){els.stage.innerHTML="";els.stage.appendChild(els.empty);els.empty.hidden=false;els.thumbs.innerHTML="";syncControls();return;}
     els.empty.hidden=true;
-    const clean=card.template==="clean";
     els.stage.innerHTML=`
       <div class="stage-bg" style="background-image:url('${card.image}');transform:scale(${card.imageZoom/100})"></div>
-      <div class="stage-overlay" style="background:${clean?`linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.96) 62%)`:`linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,${card.overlay/100+.25}))`}"></div>
+      <div class="stage-overlay" style="background:${templateOverlay(card)}"></div>
+      ${templateDecorHtml(card,ds.scale)}
       ${["eyebrow","title","body"].map(k=>layerHtml(k,card.layers[k],ds.scale)).join("")}
     `;
     bindLayers();
@@ -271,10 +309,13 @@
     }finally{button.disabled=false;}
   }
   function applyTemplate(name){
-    const c=activeCard();if(!c){state.template=name;$$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));return;}
-    remember();const t=TEMPLATES[name];c.template=name;c.overlay=t.overlay;c.accent=t.accent;
+    const t=TEMPLATES[name]; if(!t)return;
+    state.template=name;
+    $(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));
+    const c=activeCard();if(!c)return;
+    remember();c.template=name;c.overlay=t.overlay;c.accent=t.accent;
     for(const k of ["eyebrow","title","body"]){const text=c.layers[k].text;c.layers[k]={...clone(t[k]),text};}
-    state.template=name;render();saveDraft();
+    render();saveDraft();toast("템플릿을 바로 적용했습니다");
   }
   function addPage(){
     remember(); const prev=activeCard(); const t=TEMPLATES[state.template];
@@ -290,10 +331,32 @@
     for(const p of paragraphs){let line="";for(const ch of p){const test=line+ch;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=ch;}else line=test;}lines.push(line||" ");}
     return lines;
   }
+  function roundRectFill(ctx,x,y,w,h,r,fill,stroke=null,lineWidth=1){ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lineWidth;ctx.stroke();}ctx.restore();}
+  function drawTemplateDecor(ctx,card,sz){
+    const sx=sz.w/1080, sy=sz.h/1350, X=v=>v*sx, Y=v=>v*sy, A=card.accent;
+    ctx.save();
+    if(card.template==="corporate"){ctx.globalAlpha=.24;ctx.fillStyle=A;ctx.fillRect(X(700),0,X(380),sz.h);ctx.globalAlpha=1;ctx.fillRect(X(72),Y(642),X(260),Y(8));}
+    else if(card.template==="press"){ctx.fillStyle="rgba(255,255,255,.96)";ctx.fillRect(0,Y(770),sz.w,sz.h-Y(770));ctx.fillStyle=A;ctx.fillRect(X(70),Y(770),X(220),Y(10));}
+    else if(card.template==="product"){ctx.fillStyle=A;ctx.globalAlpha=.92;ctx.beginPath();ctx.arc(X(870),Y(220),X(110),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle="rgba(8,12,20,.78)";ctx.fillRect(0,Y(1160),sz.w,Y(190));}
+    else if(card.template==="interview"){ctx.globalAlpha=.5;ctx.fillStyle=A;ctx.fillRect(0,0,X(175),sz.h);ctx.globalAlpha=.72;ctx.fillStyle=A;ctx.font=`${Y(220)}px Georgia`;ctx.fillText("“",X(720),Y(500));}
+    else if(card.template==="stats"){ctx.globalAlpha=.92;ctx.fillStyle=A;ctx.fillRect(0,Y(155),sz.w,Y(365));ctx.globalAlpha=1;ctx.fillStyle="#111";ctx.font=`900 ${Y(80)}px Arial`;ctx.fillText("%",X(950),Y(175));}
+    else if(card.template==="compare"){ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(0,Y(480),X(535),Y(520));ctx.fillStyle="rgba(5,18,38,.25)";ctx.fillRect(X(545),Y(480),X(535),Y(520));ctx.fillStyle="rgba(255,255,255,.8)";ctx.fillRect(X(539),Y(480),X(2),Y(520));}
+    else if(card.template==="checklist"){roundRectFill(ctx,X(55),Y(810),X(970),Y(455),X(28),"rgba(255,255,255,.95)");for(let i=0;i<3;i++)roundRectFill(ctx,X(92),Y(870+i*100),X(42),Y(42),X(8),"rgba(255,255,255,0)",A,X(4));}
+    else if(card.template==="qa"){roundRectFill(ctx,X(65),Y(535),X(150),Y(150),X(75),A);ctx.fillStyle="#fff";ctx.font=`800 ${Y(88)}px Arial`;ctx.fillText("Q",X(105),Y(565));roundRectFill(ctx,X(890),Y(790),X(120),Y(120),X(60),"#fff");ctx.fillStyle="#5d4fd2";ctx.font=`800 ${Y(68)}px Arial`;ctx.fillText("A",X(930),Y(815));}
+    else if(card.template==="event"){ctx.translate(X(815),Y(180));ctx.rotate(35*Math.PI/180);ctx.globalAlpha=.86;ctx.fillStyle=A;ctx.fillRect(X(-115),Y(-300),X(230),Y(600));ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.strokeStyle=A;ctx.lineWidth=X(5);ctx.strokeRect(X(42),Y(42),X(996),Y(1266));}
+    else if(card.template==="premium"){ctx.strokeStyle=A;ctx.lineWidth=X(3);ctx.strokeRect(X(48),Y(48),X(984),Y(1254));ctx.fillStyle=A;ctx.fillRect(X(90),Y(650),X(180),Y(3));}
+    else if(card.template==="quote"){ctx.globalAlpha=.8;ctx.fillStyle=A;ctx.font=`${Y(300)}px Georgia`;ctx.fillText("“",X(70),Y(280));ctx.globalAlpha=1;ctx.fillRect(X(390),Y(930),X(300),Y(3));}
+    else if(card.template==="magazine"){ctx.globalAlpha=.94;ctx.fillStyle=A;ctx.fillRect(0,0,sz.w,Y(86));ctx.globalAlpha=1;ctx.strokeStyle="rgba(255,255,255,.75)";ctx.lineWidth=X(3);ctx.strokeRect(X(38),Y(105),X(1004),Y(1190));ctx.fillStyle="#fff";ctx.font=`700 ${Y(22)}px Arial`;ctx.textAlign="right";ctx.fillText("JB MAGAZINE",X(1025),Y(34));}
+    ctx.restore();
+  }
   async function cardToBlob(card){
     const sz=ratioSize(), canvas=document.createElement("canvas");canvas.width=sz.w;canvas.height=sz.h;const ctx=canvas.getContext("2d");
     const img=await loadImage(card.image); const scale=Math.max(sz.w/img.width,sz.h/img.height)*(card.imageZoom/100);const w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(sz.w-w)/2,(sz.h-h)/2,w,h);
-    const grad=ctx.createLinearGradient(0,0,0,sz.h); if(card.template==="clean"){grad.addColorStop(0,"rgba(255,255,255,0)");grad.addColorStop(.58,"rgba(255,255,255,0)");grad.addColorStop(1,"rgba(255,255,255,.98)");}else{grad.addColorStop(0,"rgba(0,0,0,.08)");grad.addColorStop(1,`rgba(0,0,0,${Math.min(.9,card.overlay/100+.25)})`);}ctx.fillStyle=grad;ctx.fillRect(0,0,sz.w,sz.h);
+    const grad=ctx.createLinearGradient(0,0,0,sz.h);
+    if(card.template==="clean"){grad.addColorStop(0,"rgba(255,255,255,0)");grad.addColorStop(.58,"rgba(255,255,255,0)");grad.addColorStop(1,"rgba(255,255,255,.98)");}
+    else if(card.template==="press"||card.template==="checklist"){grad.addColorStop(0,"rgba(0,0,0,.10)");grad.addColorStop(.56,"rgba(0,0,0,.30)");grad.addColorStop(.57,"rgba(0,0,0,0)");grad.addColorStop(1,"rgba(0,0,0,0)");}
+    else{grad.addColorStop(0,"rgba(0,0,0,.08)");grad.addColorStop(1,`rgba(0,0,0,${Math.min(.9,card.overlay/100+.25)})`);}
+    ctx.fillStyle=grad;ctx.fillRect(0,0,sz.w,sz.h);drawTemplateDecor(ctx,card,sz);
     ctx.fillStyle=card.accent;ctx.fillRect(0,0,14,sz.h);
     for(const key of ["eyebrow","title","body"]){const l=card.layers[key];ctx.save();ctx.fillStyle=l.color;ctx.font=`${l.weight} ${l.size}px ${l.font}`;ctx.textAlign=l.align;ctx.textBaseline="top";const lines=wrapLines(ctx,l.text,l.w);const x=l.align==="center"?l.x+l.w/2:l.align==="right"?l.x+l.w:l.x;lines.forEach((line,i)=>ctx.fillText(line,x,l.y+i*l.size*1.22));ctx.restore();}
     return new Promise(res=>canvas.toBlob(res,"image/png",1));
