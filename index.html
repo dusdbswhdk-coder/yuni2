@@ -6,9 +6,12 @@
   <meta name="theme-color" content="#191714" />
   <meta name="description" content="사진과 방향성을 넣어 편집 가능한 카드뉴스를 자동 구성하는 제작 도구" />
   <title>제이비 스튜디오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;600;700;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23191714'/%3E%3Crect x='15' y='13' width='30' height='38' rx='4' fill='%23fff'/%3E%3Cpath d='M22 24h16M22 31h12M22 38h16' stroke='%23ee5b2b' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./app.css" />
+  <link rel="stylesheet" href="./app.css?v=20260922-fonts2" />
 </head>
 <body>
   <header class="topbar">
@@ -135,9 +138,13 @@
         <h3>선택한 글자</h3>
         <label class="control-label">글꼴
           <select id="fontFamily">
-            <option value="Pretendard, Arial, sans-serif">고딕</option>
-            <option value="Georgia, 'Noto Serif KR', serif">명조</option>
-            <option value="'Arial Black', Pretendard, sans-serif">강조 고딕</option>
+            <option value="'Noto Sans KR', Pretendard, Arial, sans-serif">노토 고딕</option>
+            <option value="'IBM Plex Sans KR', Pretendard, Arial, sans-serif">IBM Plex KR</option>
+            <option value="'Noto Serif KR', 'Nanum Myeongjo', serif">노토 명조</option>
+            <option value="'Nanum Myeongjo', 'Noto Serif KR', serif">나눔명조</option>
+            <option value="'Gowun Batang', 'Noto Serif KR', serif">고운바탕</option>
+            <option value="'Do Hyeon', 'Noto Sans KR', sans-serif">도현</option>
+            <option value="'Black Han Sans', 'Noto Sans KR', sans-serif">블랙한산스</option>
           </select>
         </label>
         <button id="loadLocalFonts" class="local-font-button" type="button">내 PC 폰트 불러오기</button>
@@ -170,6 +177,6 @@
   </main>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="./app.js"></script>
+  <script src="./app.js?v=20260922-fonts2"></script>
 </body>
 </html>
