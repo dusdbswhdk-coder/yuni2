@@ -10,13 +10,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;600;700;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" type="image/png" href="./logo-bee.png?v=1" />
-  <link rel="stylesheet" href="./app.css?v=20260922-logozoom1" />
+  <link rel="icon" type="image/png" href="./logo-bee.png?v=2" />
+  <link rel="stylesheet" href="./app.css?v=20260922-set5a" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="brand-mark bee-mark"><img src="./logo-bee.png?v=1" alt="제이비 스튜디오 벌 캐릭터"></span>
+      <span class="brand-mark bee-mark"><img src="./logo-bee.png?v=2" alt="제이비 스튜디오 벌 캐릭터"></span>
       <div><strong>제이비 스튜디오</strong><small>카드뉴스 제작 스튜디오</small></div>
     </div>
     <div class="top-actions">
@@ -53,16 +53,17 @@
       </div>
       <button id="restoreDirection" class="restore-direction" type="button" hidden>원래 문장으로 되돌리기</button>
 
-      <div class="count-section">
-        <div class="count-heading"><span>만들 카드 장수</span><small>5장 추천</small></div>
+      <div class="set-section">
+        <div class="count-heading"><span>카드뉴스 5장 세트</span><small>한 번에 5장</small></div>
         <input id="cardCount" type="hidden" value="5" />
-        <div class="count-tabs" role="group" aria-label="만들 카드 장수">
-          <button type="button" data-count="1">1장</button>
-          <button type="button" data-count="3">3장</button>
-          <button type="button" data-count="5" class="active">5장</button>
-          <button type="button" data-count="7">7장</button>
-          <button type="button" data-count="10">10장</button>
+        <div class="card-set-grid" role="group" aria-label="카드뉴스 5장 세트">
+          <button type="button" class="card-set active" data-set="business"><strong>기업 PR</strong><small>표지 · 핵심 · 상세 · 포인트 · 마무리</small></button>
+          <button type="button" class="card-set" data-set="sns"><strong>SNS 홍보</strong><small>후킹 · 문제 · 해결 · 요약 · CTA</small></button>
+          <button type="button" class="card-set" data-set="interview"><strong>인터뷰</strong><small>소개 · 인용 · 답변 · 인사이트 · 마무리</small></button>
+          <button type="button" class="card-set" data-set="event"><strong>이벤트</strong><small>표지 · 소개 · 일정 · 혜택 · 신청</small></button>
+          <button type="button" class="card-set" data-set="compare"><strong>비교·체크</strong><small>표지 · 비교1 · 비교2 · 체크 · 결론</small></button>
         </div>
+        <p class="set-help">이미지 1장도 5가지 구도로 자동 베리에이션합니다.</p>
       </div>
       <div class="ratio-field">
         <label for="ratioSelect">출력 비율</label>
@@ -76,7 +77,7 @@
         <img id="referencePreview" alt="" hidden />
       </label>
 
-      <button id="generateBtn" class="button generate"><img class="button-bee" src="./logo-bee.png?v=1" alt=""> 다듬은 내용으로 카드뉴스 구성</button>
+      <button id="generateBtn" class="button generate"><img class="button-bee" src="./logo-bee.png?v=2" alt=""> 선택한 5장 세트로 구성</button>
       <p class="privacy-note">사진 없이도 카드뉴스를 만들 수 있습니다. 사진은 이 브라우저 안에서만 처리됩니다.</p>
     </aside>
 
@@ -91,7 +92,7 @@
         <div id="stageScaler" class="stage-scaler">
           <div id="cardStage" class="card-stage" aria-label="카드 편집 화면">
             <div class="empty-stage" id="emptyStage">
-              <img class="empty-bee" src="./logo-bee.png?v=1" alt=""><strong>사진을 넣고 자동 구성을 눌러주세요</strong><small>생성 후 제목과 본문을 클릭해서 수정할 수 있습니다.</small>
+              <img class="empty-bee" src="./logo-bee.png?v=2" alt=""><strong>사진을 넣고 자동 구성을 눌러주세요</strong><small>생성 후 제목과 본문을 클릭해서 수정할 수 있습니다.</small>
             </div>
           </div>
         </div>
@@ -108,7 +109,7 @@
       <div class="panel-title"><span>03</span><div><strong>스타일</strong><small id="selectionLabel">텍스트를 선택하세요</small></div></div>
 
       <div class="style-section">
-        <h3>템플릿</h3>
+        <h3>현재 카드 디자인</h3>
         <div class="template-filter" role="group" aria-label="템플릿 카테고리">
           <button class="active" data-template-filter="all">전체</button>
           <button data-template-filter="business">기업</button>
@@ -168,6 +169,9 @@
       <div class="style-section">
         <h3>사진과 배경</h3>
         <label class="control-label">사진 확대 <input id="imageZoom" type="range" min="100" max="200" value="100" /></label>
+        <label class="control-label">가로 위치 <input id="imageX" type="range" min="0" max="100" value="50" /></label>
+        <label class="control-label">세로 위치 <input id="imageY" type="range" min="0" max="100" value="50" /></label>
+        <label class="control-label">이미지 흐림 <input id="imageBlur" type="range" min="0" max="16" value="0" /></label>
         <label class="control-label">어둡기 <input id="overlayStrength" type="range" min="0" max="80" value="34" /></label>
         <label class="control-label">강조색 <input id="accentColor" type="color" value="#ee5b2b" /></label>
       </div>
@@ -181,6 +185,6 @@
   </main>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="./app.js?v=20260922-templatefix2"></script>
+  <script src="./app.js?v=20260922-set5a"></script>
 </body>
 </html>
