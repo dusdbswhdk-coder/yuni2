@@ -89,63 +89,25 @@
     });
   }
   function smartCopy(direction,count){
-    const raw=direction.trim()||"핵심 내용을 전하는 카드뉴스";
-    const first=raw.split(/[.!?。\n]/).map(v=>v.trim()).find(Boolean)||raw;
-    let topic=first
-      .replace(/(카드뉴스|콘텐츠|이미지|사진)(를|으로|로)?/g,"")
-      .replace(/(만들어|제작해|구성해|소개해|전달해|정리해)?\s*(줘|주세요|주기|보여줘)/g,"")
-      .replace(/(고급스럽게|친근하게|전문적으로|예쁘게|짧고\s*강하게|있어\s*보이게)/g,"")
-      .replace(/\s+/g," ").replace(/^[,·\s]+|[,·\s]+$/g,"").trim();
-    if(topic.length>26) topic=topic.slice(0,26).trim();
-    if(!topic) topic="지금 주목해야 할 이야기";
-    const isEvent=/행사|간담회|발표|현장|세미나|전시|박람회|촬영/.test(raw);
-    const isProduct=/제품|신제품|브랜드|출시|기술|서비스/.test(raw);
-    const isInterview=/인터뷰|사람|인물|대표|전문가|이야기/.test(raw);
-    const isGuide=/방법|팁|노하우|가이드|사용법|해야/.test(raw);
-    let story;
-    if(isEvent) story=[
-      ["SCENE · 01","현장에서 시작된\n새로운 이야기",`${topic}, 그날의 핵심 장면과 메시지를 한눈에 만나보세요.`],
-      ["WHY IT MATTERS · 02","왜 지금\n주목해야 할까",`이번 현장이 던진 의미와 사람들이 주목한 이유를 짚어봅니다.`],
-      ["KEY MOMENT · 03","사진으로 만나는\n결정적 순간",`말보다 선명했던 현장의 분위기와 주요 장면을 골라 담았습니다.`],
-      ["POINT · 04","핵심만 빠르게\n정리했습니다",`복잡한 내용은 덜어내고 꼭 알아야 할 메시지만 간결하게 전합니다.`],
-      ["NEXT · 05","이 변화가\n이어질 곳",`${topic} 이후 기대되는 다음 흐름을 함께 살펴봅니다.`],
-      ["BEHIND · 06","장면 뒤에 담긴\n진짜 의미",`눈에 보이는 결과 너머, 이번 이야기가 남긴 의미를 정리했습니다.`],
-      ["SUMMARY · 07","오늘의 핵심을\n한 문장으로",`${topic}, 지금 기억해야 할 메시지는 분명합니다.`]
-    ]; else if(isProduct) story=[
-      ["NEW STANDARD · 01","새로운 기준을\n제안하다",`${topic}의 핵심 가치와 달라진 경험을 소개합니다.`],
-      ["WHY · 02","왜 달라야\n했을까",`사용자의 고민에서 출발한 변화의 이유를 짚어봅니다.`],
-      ["FEATURE · 03","차이를 만드는\n핵심 포인트",`한눈에 알아볼 수 있도록 주요 특징을 간결하게 정리했습니다.`],
-      ["EXPERIENCE · 04","기능을 넘어\n경험으로",`실제로 사용했을 때 체감할 수 있는 가치를 살펴봅니다.`],
-      ["VALUE · 05","선택해야 할\n이유는 분명합니다",`${topic}이 제안하는 새로운 가능성을 확인해보세요.`],
-      ["DETAIL · 06","작은 디테일이\n만드는 큰 차이",`완성도를 높이는 세심한 요소들을 사진과 함께 소개합니다.`],
-      ["SUMMARY · 07","한눈에 보는\n핵심 정리",`${topic}의 중요한 포인트만 다시 모았습니다.`]
-    ]; else if(isInterview) story=[
-      ["PORTRAIT · 01","한 사람에게서\n시작된 이야기",`${topic}에 담긴 생각과 진솔한 목소리를 전합니다.`],
-      ["BEGINNING · 02","모든 것에는\n시작이 있습니다",`지금의 이야기가 시작된 배경과 계기를 들어봤습니다.`],
-      ["INSIGHT · 03","경험이 만든\n단단한 시선",`시간을 지나며 얻은 생각과 중요한 깨달음을 정리했습니다.`],
-      ["MESSAGE · 04","가장 전하고\n싶었던 말",`인터뷰 속에서 놓치지 말아야 할 핵심 메시지를 담았습니다.`],
-      ["EPILOGUE · 05","이야기는 계속됩니다",`${topic}, 앞으로 이어질 다음 장면을 기대해봅니다.`],
-      ["QUOTE · 06","오래 남는\n한마디",`수많은 이야기 가운데 가장 기억하고 싶은 문장을 담아보세요.`],
-      ["SUMMARY · 07","사람과 생각을\n한눈에",`이번 이야기의 흐름과 의미를 짧게 되짚어봅니다.`]
-    ]; else if(isGuide) story=[
-      ["GUIDE · 01","복잡한 내용도\n한 번에 이해하기",`${topic}, 꼭 필요한 내용만 쉽게 정리했습니다.`],
-      ["CHECK · 02","시작 전에\n먼저 확인하세요",`놓치기 쉬운 조건과 준비 사항부터 차근차근 살펴봅니다.`],
-      ["STEP · 03","핵심은\n이 순서입니다",`실제로 따라 하기 쉽도록 중요한 과정을 나눠 설명합니다.`],
-      ["TIP · 04","결과를 바꾸는\n작은 차이",`알아두면 도움이 되는 실무 팁과 주의점을 함께 정리했습니다.`],
-      ["SUMMARY · 05","이것만 기억하면\n충분합니다",`${topic}의 핵심을 마지막으로 한 번 더 확인하세요.`]
-    ]; else story=[
-      ["ISSUE BRIEF · 01","지금 주목해야 할\n이야기",`${topic}, 핵심부터 차분하게 살펴봅니다.`],
-      ["CONTEXT · 02","먼저 배경부터\n짚어봅니다",`이 이야기가 시작된 이유와 흐름을 알기 쉽게 정리했습니다.`],
-      ["KEY POINT · 03","핵심은\n바로 이것입니다",`여러 내용 가운데 꼭 알아야 할 포인트만 골라 담았습니다.`],
-      ["VIEW · 04","사진 속에서\n읽는 변화",`장면마다 담긴 의미와 주목할 부분을 함께 살펴보세요.`],
-      ["SUMMARY · 05","한눈에 보는\n오늘의 결론",`${topic}, 마지막으로 기억해야 할 내용을 정리했습니다.`],
-      ["DETAIL · 06","놓치기 쉬운\n한 가지",`조금 더 자세히 보면 이 이야기를 이해하는 단서가 보입니다.`],
-      ["NEXT · 07","다음 이야기를\n기대해 주세요",`지금의 흐름이 앞으로 어떻게 이어질지 주목해보세요.`]
-    ];
-    const cards=[];
-    for(let i=0;i<count;i++){
-      const src=story[i%story.length];
-      cards.push({eyebrow:src[0].replace(/\d+$/,String(i+1).padStart(2,"0")),title:src[1],body:src[2]});
+    const raw=direction.trim();
+    const cards=Array.from({length:count},()=>({eyebrow:"",title:"",body:""}));
+    if(!raw) return cards;
+
+    // 사용자 입력에 없는 문장을 새로 만들지 않습니다.
+    // 줄바꿈/문장 단위로만 나누고, 원문은 그대로 유지합니다.
+    const chunks=raw
+      .split(/\n+/)
+      .flatMap(line=>line.split(/(?<=[.!?。！？])\s+/))
+      .map(v=>v.trim())
+      .filter(Boolean);
+
+    if(!chunks.length) return cards;
+    for(let i=0;i<Math.min(count,chunks.length);i++) cards[i].title=chunks[i];
+
+    // 카드 수보다 문장이 많을 때도 새 문구를 만들지 않고
+    // 남은 원문을 마지막 카드 본문에 그대로 이어 붙입니다.
+    if(chunks.length>count){
+      cards[count-1].body=chunks.slice(count).join("\n");
     }
     return cards;
   }
@@ -191,7 +153,7 @@
         body:{...clone(template.body),text:c.body}
       }
     }));
-    state.active=0; state.selected="title"; render(); saveDraft(); toast("입력 문장을 후킹 제목과 카드 흐름으로 다시 구성했습니다");
+    state.active=0; state.selected="title"; render(); saveDraft(); toast("입력한 문장만 사용해 카드에 배치했습니다");
   }
   function ratioSize(){
     if(state.ratio==="1:1") return {w:1080,h:1080};
@@ -263,6 +225,7 @@
     syncControls();
   }
   function layerHtml(key,l,s){
+    if(!l?.text?.trim()) return "";
     return `<div class="text-layer ${state.selected===key?"selected":""}" data-layer="${key}" tabindex="0" style="left:${l.x*s}px;top:${l.y*s}px;width:${l.w*s}px;font-size:${l.size*s}px;font-weight:${l.weight};color:${l.color};text-align:${l.align};font-family:${l.font}">${escapeHtml(l.text)}</div>`;
   }
   function bindLayers(){
@@ -344,15 +307,24 @@
   function applyTemplate(name){
     const t=TEMPLATES[name]; if(!t)return;
     state.template=name;
-    $$(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));
+    $(".template").forEach(b=>b.classList.toggle("active",b.dataset.template===name));
     const c=activeCard();if(!c)return;
-    remember();c.template=name;c.overlay=t.overlay;c.accent=t.accent;
-    for(const k of ["eyebrow","title","body"]){const text=c.layers[k].text;c.layers[k]={...clone(t[k]),text};}
-    render();saveDraft();toast("템플릿을 바로 적용했습니다");
+    remember();
+
+    // 템플릿은 디자인만 바꾸고, 사용자가 작성한 문구는 절대 덮어쓰지 않습니다.
+    const existingText={
+      eyebrow:c.layers?.eyebrow?.text??"",
+      title:c.layers?.title?.text??"",
+      body:c.layers?.body?.text??""
+    };
+    c.template=name;c.overlay=t.overlay;c.accent=t.accent;
+    for(const k of ["eyebrow","title","body"]) c.layers[k]={...clone(t[k]),text:existingText[k]};
+
+    render();saveDraft();toast("글은 그대로 두고 디자인만 바꿨습니다");
   }
   function addPage(){
     remember(); const prev=activeCard(); const t=TEMPLATES[state.template];
-    state.cards.push(prev?{...clone(prev),id:uid()}:{id:uid(),image:state.images[0]?.data||"",template:state.template,overlay:t.overlay,imageZoom:100,accent:t.accent,layers:{eyebrow:{...clone(t.eyebrow),text:"NEW CARD"},title:{...clone(t.title),text:"새 카드 제목"},body:{...clone(t.body),text:"본문을 입력하세요."}}});
+    state.cards.push(prev?{...clone(prev),id:uid()}:{id:uid(),image:state.images[0]?.data||"",template:state.template,overlay:t.overlay,imageZoom:100,accent:t.accent,layers:{eyebrow:{...clone(t.eyebrow),text:""},title:{...clone(t.title),text:""},body:{...clone(t.body),text:""}}});
     state.active=state.cards.length-1;render();saveDraft();
   }
   function duplicatePage(){if(!activeCard())return;remember();state.cards.splice(state.active+1,0,{...clone(activeCard()),id:uid()});state.active++;render();saveDraft();toast("카드를 복제했습니다");}
@@ -396,7 +368,7 @@
     else{grad.addColorStop(0,"rgba(0,0,0,.08)");grad.addColorStop(1,`rgba(0,0,0,${Math.min(.9,card.overlay/100+.25)})`);}
     ctx.fillStyle=grad;ctx.fillRect(0,0,sz.w,sz.h);drawTemplateDecor(ctx,card,sz);
     ctx.fillStyle=card.accent;ctx.fillRect(0,0,14,sz.h);
-    for(const [key,l] of layerEntries(card)){ctx.save();ctx.fillStyle=l.color;ctx.font=`${l.weight} ${l.size}px ${l.font}`;ctx.textAlign=l.align;ctx.textBaseline="top";const lines=wrapLines(ctx,l.text,l.w);const x=l.align==="center"?l.x+l.w/2:l.align==="right"?l.x+l.w:l.x;lines.forEach((line,i)=>ctx.fillText(line,x,l.y+i*l.size*1.22));ctx.restore();}
+    for(const [key,l] of layerEntries(card)){if(!l?.text?.trim())continue;ctx.save();ctx.fillStyle=l.color;ctx.font=`${l.weight} ${l.size}px ${l.font}`;ctx.textAlign=l.align;ctx.textBaseline="top";const lines=wrapLines(ctx,l.text,l.w);const x=l.align==="center"?l.x+l.w/2:l.align==="right"?l.x+l.w:l.x;lines.forEach((line,i)=>ctx.fillText(line,x,l.y+i*l.size*1.22));ctx.restore();}
     return new Promise(res=>canvas.toBlob(res,"image/png",1));
   }
   async function downloadCurrent(){
@@ -451,7 +423,7 @@
   $("#downloadPageBtn").addEventListener("click",downloadCurrent);$("#downloadAllBtn").addEventListener("click",downloadAll);
 
   window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();}});
-  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-fonts2",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-usertextonly1",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
   try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
   render();
 
