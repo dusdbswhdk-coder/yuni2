@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;600;700;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/png" href="./logo-bee.png?v=2" />
-  <link rel="stylesheet" href="./app.css?v=20260923-spell1" />
+  <link rel="stylesheet" href="./app.css?v=20260923-report1" />
 </head>
 <body>
   <header class="topbar">
@@ -52,6 +52,15 @@
         <button id="polishDirection" type="button"><span>✦</span> 문장 다듬기</button>
       </div>
       <button id="restoreDirection" class="restore-direction" type="button" hidden>원래 문장으로 되돌리기</button>
+
+      <div class="report-share">
+        <button id="copyReportLink" type="button"><span>↗</span> 보고용 링크 복사</button>
+        <small>현재 문장 · 톤 · 카드 세트 · 비율을 링크에 담습니다.</small>
+      </div>
+      <div id="reportLoaded" class="report-loaded" hidden>
+        <strong>보고용 링크로 불러온 문장</strong>
+        <span>링크를 받은 사람이 이 내용을 바로 확인할 수 있습니다.</span>
+      </div>
 
       <div class="spell-checker">
         <div class="spell-checker-head">
@@ -207,6 +216,7 @@
   </main>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="./app.js?v=20260922-polish1"></script>\n  <script src="./spellcheck.js?v=20260923-spell2"></script>
+  <script src="./app.js?v=20260923-report1"></script>
+  <script src="./spellcheck.js?v=20260923-spell2"></script>
 </body>
 </html>
