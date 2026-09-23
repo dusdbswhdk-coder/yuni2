@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;600;700;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/png" href="./logo-bee.png?v=2" />
-  <link rel="stylesheet" href="./app.css?v=20260922-set5a" />
+  <link rel="stylesheet" href="./app.css?v=20260923-spell1" />
 </head>
 <body>
   <header class="topbar">
@@ -52,6 +52,28 @@
         <button id="polishDirection" type="button"><span>✦</span> 문장 다듬기</button>
       </div>
       <button id="restoreDirection" class="restore-direction" type="button" hidden>원래 문장으로 되돌리기</button>
+
+      <div class="spell-checker">
+        <div class="spell-checker-head">
+          <div>
+            <strong>한글 맞춤법 검사</strong>
+            <small>GeulLint MIT 공개 규칙 기반 · 브라우저 로컬</small>
+          </div>
+          <button id="spellCheckBtn" type="button">✓ 검사</button>
+        </div>
+        <div id="spellPanel" class="spell-panel" hidden>
+          <div class="spell-summary">
+            <span id="spellStatus">검사 준비됨</span>
+            <a href="https://github.com/binibinibin123/geullint" target="_blank" rel="noreferrer">원본 프로젝트</a>
+          </div>
+          <div id="spellResults" class="spell-results"></div>
+          <div class="spell-actions">
+            <button id="spellApplyAll" type="button" disabled>안전한 수정 전체 적용</button>
+            <button id="spellRestore" type="button" disabled>검사 전 원문 복원</button>
+          </div>
+          <p class="spell-note">완전한 GeulLint WASM 엔진이 아니라 공개 규칙 카탈로그의 안전/검토 예시를 JB Studio용 경량 검사기로 이식한 기능입니다.</p>
+        </div>
+      </div>
 
       <div class="set-section">
         <div class="count-heading"><span>카드뉴스 5장 세트</span><small>한 번에 5장</small></div>
@@ -185,6 +207,6 @@
   </main>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="./app.js?v=20260922-polish1"></script>
+  <script src="./app.js?v=20260922-polish1"></script>\n  <script src="./spellcheck.js?v=20260923-spell1"></script>
 </body>
 </html>
