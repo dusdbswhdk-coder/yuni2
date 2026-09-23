@@ -118,6 +118,69 @@
     }
   ];
 
+  // Review-only typo candidates. This catches one-syllable insertion/deletion/substitution
+  // around frequently used Korean copy words without auto-correcting unknown words.
+  const TYPO_LEXICON = [
+    "안녕하세요","감사합니다","반갑습니다","부탁드립니다","확인해주세요","알려주세요","보내주세요",
+    "가능합니다","필요합니다","진행합니다","진행됩니다","완료했습니다","준비했습니다","소개합니다",
+    "안내합니다","참여해주세요","신청해주세요","문의해주세요","중요합니다","좋습니다","맞습니다",
+    "있습니다","없습니다","어렵습니다","쉽습니다","새로운","특별한","다양한","전문적인","자연스럽게",
+    "세련되게","친근하게","간결하게","정확하게","편리하게","안전하게","브랜드","제품","서비스",
+    "이벤트","행사","고객","혜택","정보","내용","일정","신청","문의","참여","발표","인터뷰","현장",
+    "디자인","카드뉴스","스튜디오","이미지","사진","문장","제목","본문","회사","대표","제작","촬영",
+    "편집","업데이트","다운로드","저장","기능","사용","선택","자동","생성","구성","비교","체크리스트",
+    "마무리","자세히","함께","지금","오늘","내일","이번","먼저","바로","가장","모두","정말"
+  ];
+
+  function editDistance(a,b){
+    if(a===b) return 0;
+    if(Math.abs(a.length-b.length)>1) return 2;
+    const prev=Array.from({length:b.length+1},(_,i)=>i);
+    const cur=new Array(b.length+1);
+    for(let i=1;i<=a.length;i++){
+      cur[0]=i;
+      let rowMin=cur[0];
+      for(let j=1;j<=b.length;j++){
+        const cost=a[i-1]===b[j-1]?0:1;
+        cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+cost);
+        rowMin=Math.min(rowMin,cur[j]);
+      }
+      if(rowMin>1) return 2;
+      for(let j=0;j<=b.length;j++) prev[j]=cur[j];
+    }
+    return prev[b.length];
+  }
+
+  function typoCandidates(text){
+    const out=[];
+    const tokenRe=/[가-힣]{4,}/g;
+    let match;
+    while((match=tokenRe.exec(text))){
+      const token=match[0];
+      let best=null;
+      let bestDistance=2;
+      let ties=0;
+      for(const word of TYPO_LEXICON){
+        if(word===token || Math.abs(word.length-token.length)>1) continue;
+        const distance=editDistance(token,word);
+        if(distance<bestDistance){bestDistance=distance;best=word;ties=1;}
+        else if(distance===bestDistance && distance<=1){ties++;}
+      }
+      if(best && bestDistance===1 && ties===1){
+        out.push({
+          id:"typo.fuzzy.common-word",
+          safe:false,
+          start:match.index,
+          end:match.index+token.length,
+          original:token,
+          suggestion:best,
+          message:"자주 쓰는 표현과 한 글자 차이가 납니다. 오타인지 확인해보세요."
+        });
+      }
+    }
+    return out;
+  }
+
   let restoreText = null;
   let findings = [];
 
@@ -146,6 +209,7 @@
         if (!match[0].length) re.lastIndex++;
       }
     }
+    out.push(...typoCandidates(text));
     out.sort((a,b)=>a.start-b.start || (b.end-b.start)-(a.end-a.start));
     const filtered=[];
     let lastEnd=-1;
