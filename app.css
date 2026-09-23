@@ -48,3 +48,19 @@ textarea,select,input[type=number]{width:100%;border:1px solid var(--line);backg
 
 /* Text-only card support */
 .stage-bg.text-only{transform:none!important}.thumb-text-only{position:absolute;inset:0;display:block}.thumb:has(.thumb-text-only) span{background:rgba(0,0,0,.45);border-radius:3px;padding:1px 3px}#imageZoom:disabled,#imageX:disabled,#imageY:disabled,#imageBlur:disabled{opacity:.38;cursor:not-allowed}
+
+/* Korean spell checker */
+.spell-checker{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.spell-checker-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px}
+.spell-checker-head>div{display:flex;flex-direction:column;gap:2px}.spell-checker-head strong{font-size:12px}.spell-checker-head small{font-size:9px;color:var(--muted);line-height:1.35}
+.spell-checker-head>button{border:0;border-radius:7px;background:#173222;color:#fff;font-size:11px;font-weight:800;padding:8px 11px;white-space:nowrap}
+.spell-panel{border-top:1px solid var(--line);padding:10px}.spell-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;color:var(--muted);margin-bottom:8px}
+.spell-summary a{color:#287047;text-decoration:none;font-weight:700;white-space:nowrap}.spell-results{display:flex;flex-direction:column;gap:7px;max-height:270px;overflow:auto}
+.spell-item{border:1px solid #e7e1d3;border-radius:8px;padding:9px;background:#fffdf8}.spell-item-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.spell-item-head small{font-size:8px;color:#9a9488;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spell-badge{font-size:8px;font-weight:800;border-radius:999px;padding:3px 6px}
+.spell-badge.safe{background:#e8f6ec;color:#287047}.spell-badge.review{background:#fff3d8;color:#8a6411}
+.spell-change{display:flex;align-items:center;gap:6px;margin:7px 0 4px;font-size:12px;flex-wrap:wrap}.spell-change del{color:#a34a3a}.spell-change b{color:#a9a197}.spell-change strong{color:#173222}
+.spell-message{font-size:10px;line-height:1.45;color:var(--muted);margin:0 0 7px}.spell-item>button{border:1px solid #b9cdbd;background:#f4fbf6;color:#245b31;border-radius:6px;padding:6px 8px;font-size:9px;font-weight:800}
+.spell-actions{display:grid;grid-template-columns:1.2fr 1fr;gap:6px;margin-top:9px}.spell-actions button{border:1px solid var(--line);background:#fff;border-radius:7px;min-height:34px;font-size:9px;font-weight:800;color:var(--ink)}
+.spell-actions button:first-child{background:#173222;color:#fff;border-color:#173222}.spell-actions button:disabled{opacity:.38;cursor:not-allowed}.spell-empty{font-size:10px;line-height:1.5;color:#287047;margin:4px 0}
+.spell-note{font-size:8px;line-height:1.45;color:#999186;margin:8px 1px 0}
