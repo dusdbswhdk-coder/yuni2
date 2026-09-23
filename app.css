@@ -71,3 +71,17 @@ textarea,select,input[type=number]{width:100%;border:1px solid var(--line);backg
 .report-share button span{font-size:13px;margin-right:4px}.report-share small{font-size:8px;line-height:1.35;color:var(--muted);text-align:center}
 .report-loaded{margin-top:8px;border:1px solid #b9cdbd;border-radius:8px;background:#f3faf5;padding:9px 10px;display:flex;flex-direction:column;gap:2px}
 .report-loaded[hidden]{display:none}.report-loaded strong{font-size:10px;color:#245b31}.report-loaded span{font-size:8px;line-height:1.4;color:#5b7561}
+
+/* Keep the 5-card navigator close to the card preview */
+.stage-wrap{flex-direction:column;gap:12px}
+.page-strip{width:min(640px,100%);height:92px;flex:0 0 auto;border:1px solid var(--line);border-radius:10px;background:#f7f5f0;padding:8px 12px;box-shadow:0 8px 24px rgba(28,24,18,.08)}
+.thumbnails{height:74px}
+.thumb{height:66px}
+.add-page{height:66px}
+@media(max-width:760px){
+  .stage-wrap{gap:8px}
+  .page-strip{position:static;width:100%;height:84px;border-radius:8px;padding:6px 8px}
+  .thumbnails{height:70px}
+  .thumb{height:62px}
+  .add-page{height:62px}
+}
