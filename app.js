@@ -273,6 +273,60 @@
     els.direction.value=state.originalDirection;state.originalDirection=null;$("#restoreDirection").hidden=true;
     toast("원래 문장으로 되돌렸습니다");
   }
+  function encodeSharePayload(payload){
+    const bytes=new TextEncoder().encode(JSON.stringify(payload));
+    let binary="";
+    bytes.forEach(b=>binary+=String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  }
+  function decodeSharePayload(value){
+    try{
+      const normalized=value.replace(/-/g,"+").replace(/_/g,"/");
+      const padded=normalized+"=".repeat((4-normalized.length%4)%4);
+      const binary=atob(padded);
+      const bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }catch{return null;}
+  }
+  function buildReportLink(){
+    const payload={
+      v:1,
+      text:els.direction.value,
+      tone:$("#toneSelect")?.value||"premium",
+      set:state.templateSet||"business",
+      ratio:state.ratio||"4:5"
+    };
+    return location.origin+location.pathname+"?v=report1#share="+encodeSharePayload(payload);
+  }
+  async function copyReportLink(){
+    if(!els.direction.value.trim()){toast("보고할 문장을 먼저 입력해주세요");els.direction.focus();return;}
+    const url=buildReportLink();
+    try{
+      await navigator.clipboard.writeText(url);
+      toast("보고용 링크를 복사했습니다");
+    }catch{
+      const ta=document.createElement("textarea");
+      ta.value=url;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
+      document.execCommand("copy");ta.remove();
+      toast("보고용 링크를 복사했습니다");
+    }
+  }
+  function applyReportLink(){
+    const match=location.hash.match(/^#share=(.+)$/);
+    if(!match) return false;
+    const payload=decodeSharePayload(match[1]);
+    if(!payload||typeof payload.text!=="string") return false;
+    els.direction.value=payload.text;
+    if(payload.tone&&$("#toneSelect")?.querySelector(`option[value="${payload.tone}"]`)) $("#toneSelect").value=payload.tone;
+    if(payload.set&&TEMPLATE_SETS[payload.set]) state.templateSet=payload.set;
+    if(["4:5","1:1","9:16"].includes(payload.ratio)) state.ratio=payload.ratio;
+    state.cards=[];state.images=[];state.reference=null;state.active=0;state.history=[];state.originalDirection=null;
+    renderImageList();
+    $("#ratioSelect").value=state.ratio;
+    $("#reportLoaded").hidden=false;
+    return true;
+  }
+
   async function generate(){
     remember();
     const refColor=await getThemeSample();
@@ -563,11 +617,14 @@
   $("#nextPage").addEventListener("click",()=>{if(state.cards.length){state.active=(state.active+1)%state.cards.length;render();}});
   $("#zoomOut").addEventListener("click",()=>{state.zoom=Math.max(.4,state.zoom-.1);syncControls();});$("#zoomIn").addEventListener("click",()=>{state.zoom=Math.min(1,state.zoom+.1);syncControls();});
   $("#downloadPageBtn").addEventListener("click",downloadCurrent);$("#downloadAllBtn").addEventListener("click",downloadAll);
+  $("#copyReportLink").addEventListener("click",copyReportLink);
 
   window.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();}});
-  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260922-set5a",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
-  try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});if(!TEMPLATE_SETS[state.templateSet])state.templateSet="business";renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js?v=20260923-report1",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
+  const openedReport=applyReportLink();
+  if(!openedReport){try{const draft=JSON.parse(localStorage.getItem("cardnews-draft"));if(draft?.cards?.length){Object.assign(state,draft,{history:[],dragging:null});if(!TEMPLATE_SETS[state.templateSet])state.templateSet="business";renderImageList();$("#ratioSelect").value=state.ratio;toast("지난 작업을 불러왔습니다");}}catch{}}
   render();
+  if(openedReport) toast("보고용 링크의 문장을 불러왔습니다");
 
   if(document.modelContext?.registerTool){
     const lifecycle=new AbortController();
