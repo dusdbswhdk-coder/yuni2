@@ -81,4 +81,6 @@ def test_model_uses_private_cache_and_retries_busy_download(monkeypatch, tmp_pat
     assert subtitle_app.model() is ready_model
     assert len(calls) == 2
     assert calls[0][1]["download_root"] == str(cache)
+    assert calls[0][1]["device"] == "cpu"
+    assert calls[0][1]["compute_type"] == "int8"
     assert cache.is_dir()

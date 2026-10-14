@@ -55,6 +55,7 @@ jobs:
         shell: pwsh
         run: |
           $exe = Join-Path $PWD "subtitle-studio\dist\SubtitleStudio\SubtitleStudio.exe"
+          $env:SUBTITLE_MODEL = "tiny"
           $process = Start-Process -FilePath $exe -PassThru -WindowStyle Hidden
           try {
             $ready = $false
@@ -70,6 +71,18 @@ jobs:
               Start-Sleep -Seconds 1
             }
             if (-not $ready) { throw "Packaged app did not serve its interface" }
+            $env:SAMPLE_AUDIO = Join-Path $env:RUNNER_TEMP "sample.wav"
+            @'
+          import os
+          import wave
+          with wave.open(os.environ["SAMPLE_AUDIO"], "wb") as audio:
+              audio.setnchannels(1)
+              audio.setsampwidth(2)
+              audio.setframerate(16000)
+              audio.writeframes(b"\x00\x00" * 32000)
+          '@ | python -
+            $transcribed = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/transcribe" -Method Post -Form @{ file = Get-Item $env:SAMPLE_AUDIO; language = "ko" } -TimeoutSec 300
+            if ($null -eq $transcribed.segments) { throw "Packaged app did not transcribe a WAV file" }
           } finally {
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
           }
@@ -99,10 +112,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create subtitle-studio-preview-20261014-r2
+          gh release create subtitle-studio-preview-20261014-r3
           SubtitleStudio-Windows.zip
           --repo "${{ github.repository }}"
           --target "${{ github.sha }}"
           --title "Subtitle Studio Windows preview"
-          --notes "Windows portable preview with a private model cache and retry for WinError 32. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --notes "Windows portable preview using CPU by default to avoid missing CUDA DLLs, plus private model cache and retry for WinError 32. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
           --prerelease

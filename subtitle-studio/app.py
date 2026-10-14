@@ -41,8 +41,8 @@ def model():
             try:
                 _model = WhisperModel(
                     os.getenv("SUBTITLE_MODEL", "small"),
-                    device=os.getenv("SUBTITLE_DEVICE", "auto"),
-                    compute_type=os.getenv("SUBTITLE_COMPUTE_TYPE", "default"),
+                    device=os.getenv("SUBTITLE_DEVICE", "cpu"),
+                    compute_type=os.getenv("SUBTITLE_COMPUTE_TYPE", "int8"),
                     download_root=str(cache_dir),
                 )
                 break

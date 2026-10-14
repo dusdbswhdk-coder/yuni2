@@ -4,7 +4,7 @@
 
 ## Windows에서 시작하기
 
-**간편 실행:** [SubtitleStudio-Windows.zip](https://github.com/dusdbswhdk-coder/yuni2/releases/download/subtitle-studio-preview-20261014-r2/SubtitleStudio-Windows.zip)을 다운로드해 압축을 풀고, `SubtitleStudio/SubtitleStudio.exe`를 실행하세요. Python 설치는 필요하지 않습니다. 첫 자막 추출 때 음성 인식 모델을 인터넷으로 내려받으며, 완료되면 PC에 보관됩니다.
+**간편 실행:** [SubtitleStudio-Windows.zip](https://github.com/dusdbswhdk-coder/yuni2/releases/download/subtitle-studio-preview-20261014-r3/SubtitleStudio-Windows.zip)을 다운로드해 압축을 풀고, `SubtitleStudio/SubtitleStudio.exe`를 실행하세요. Python 설치는 필요하지 않습니다. 첫 자막 추출 때 음성 인식 모델을 인터넷으로 내려받으며, 완료되면 PC에 보관됩니다.
 
 **소스 코드로 실행하려면:**
 
@@ -20,7 +20,7 @@ Windows에서 py 명령을 찾을 수 없다면 PowerShell에서 python -m pip i
 ## 기능과 비용
 
 - MP4, MOV, M4A, MP3, WAV, WEBM, FLAC 파일을 최대 2GB까지 선택합니다.
-- 음성 인식은 faster-whisper로 PC에서 수행합니다. 기본 모델은 small이며 환경 변수 SUBTITLE_MODEL로 바꿀 수 있습니다. GPU 사용 가능 여부와 속도는 PC 환경에 따라 다릅니다.
+- 음성 인식은 faster-whisper로 PC에서 수행합니다. 기본 모델은 small이며 환경 변수 SUBTITLE_MODEL로 바꿀 수 있습니다. 기본은 CPU int8 실행으로 별도 CUDA 설치가 필요하지 않습니다. SUBTITLE_DEVICE=cuda를 설정해 GPU를 사용하려면 호환되는 CUDA 12/cuDNN 라이브러리가 설치되어 있어야 합니다. 처리 속도는 PC 환경에 따라 다릅니다.
 - **기본 맞춤법 검사**는 자주 틀리는 표기에 대한 제한적인 로컬 규칙입니다. 완전한 한국어 교정기가 아닙니다.
 - **AI 정밀 검사**는 선택 기능입니다. OPENAI_API_KEY가 있으면 자막 문장만 OpenAI API로 보내 수정안을 받습니다. 영상 파일은 전송하지 않습니다. ChatGPT 구독과 API 요금은 별개입니다. 키는 코드나 GitHub에 넣지 마세요.
 - AI 키는 실행 전 같은 PowerShell 창에서 $env:OPENAI_API_KEY="본인 키"처럼 설정한 뒤 python -m uvicorn app:app --host 127.0.0.1 --port 8765 로 실행합니다. run_windows.bat을 새 창에서 실행하면 해당 PowerShell 환경 변수가 전달되지 않을 수 있습니다.
