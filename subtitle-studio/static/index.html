@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11141e">
+  <title>자막 작업실</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div><span class="eyebrow">SUBTITLE STUDIO</span><h1>자막 작업실</h1></div>
+      <span class="tag">영상부터 프리미어 자막까지</span>
+    </header>
+    <section class="panel upload">
+      <div class="section-title"><span class="number">01</span><div><h2>영상 불러오기</h2><p>파일을 선택하고 음성을 자막으로 변환하세요.</p></div></div>
+      <div class="upload-controls">
+        <input id="file" type="file" accept="video/*,audio/*,.mp4,.mov,.m4a,.mp3,.wav,.webm,.flac" aria-label="음성 또는 영상 파일">
+        <select id="language" aria-label="원본 언어">
+          <option value="ko">한국어</option><option value="auto">자동 감지</option>
+          <option value="en">영어</option><option value="ja">일본어</option><option value="zh">중국어</option>
+        </select>
+        <button id="start" class="primary">자막 추출</button>
+      </div>
+      <p class="hint">MP4 · MOV · M4A · MP3 · WAV · WEBM · FLAC / 최대 2GB. 파일은 PC에서 처리합니다.</p>
+      <div id="status" class="status" role="status" aria-live="polite">파일을 선택해 주세요.</div>
+    </section>
+    <div class="workspace">
+      <aside class="panel side">
+        <div class="section-title"><span class="number">02</span><div><h2>미리보기와 검사</h2><p>음성을 들으며 문장을 확인하세요.</p></div></div>
+        <video id="player" controls playsinline preload="metadata"></video>
+        <p class="hint">구간의 이동 버튼을 누르면 해당 시점으로 갑니다.</p>
+        <label for="terms">보호할 브랜드명·제품명</label>
+        <input id="terms" type="text" value="KCC, 숲으로, 스포탄" placeholder="쉼표로 구분">
+        <div class="actions">
+          <button id="checkLocal" class="secondary" disabled>기본 맞춤법 검사</button>
+          <button id="checkAi" class="secondary" disabled>AI 정밀 검사</button>
+        </div>
+        <p class="hint">기본 검사는 PC에서 실행됩니다. AI 정밀 검사는 별도 API 키가 필요하고 자막 문장만 전송합니다. 제안은 직접 선택해 적용합니다.</p>
+      </aside>
+      <section class="panel editor">
+        <div class="editor-head">
+          <div class="section-title"><span class="number">03</span><div><h2>자막 편집 <small id="count"></small></h2><p>문장과 시작·끝 시간을 직접 고칠 수 있습니다.</p></div></div>
+          <button id="add" class="secondary" disabled>+ 구간 추가</button>
+        </div>
+        <div id="items" class="items"><div class="empty">자막을 추출하면 구간별 문장이 여기에 표시됩니다.</div></div>
+        <div class="export">
+          <span>편집한 내용으로 저장</span>
+          <button id="srt" class="primary" disabled>SRT 다운로드</button>
+          <button id="txt" class="secondary" disabled>TXT</button>
+          <button id="ass" class="secondary" disabled>ASS</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
