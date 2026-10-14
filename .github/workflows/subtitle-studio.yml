@@ -1,0 +1,130 @@
+name: Subtitle Studio checks
+on:
+  pull_request:
+    paths:
+      - 'subtitle-studio/**'
+      - '.github/workflows/subtitle-studio.yml'
+  push:
+    branches:
+      - codex/subtitle-studio-mvp-20261014
+    paths:
+      - 'subtitle-studio/**'
+      - '.github/workflows/subtitle-studio.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m pip install -r subtitle-studio/requirements.txt pytest httpx
+      - run: node --check subtitle-studio/static/app.js
+      - run: node --check subtitle-studio/static/segmentation.js
+      - run: node --test subtitle-studio/tests/test_segmentation.cjs
+      - run: python -m compileall -q subtitle-studio/app.py
+      - run: python -m pytest -q tests
+        working-directory: subtitle-studio
+
+  windows-package:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt pyinstaller
+        working-directory: subtitle-studio
+      - name: Build portable Windows app
+        run: >
+          pyinstaller --noconfirm --clean --onedir --name SubtitleStudio
+          --add-data "static;static"
+          --collect-all faster_whisper --collect-all ctranslate2
+          --collect-all av --collect-all onnxruntime
+          --collect-all kiwipiepy --collect-all kiwipiepy_model
+          launcher.py
+        working-directory: subtitle-studio
+      - name: Smoke test packaged server
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD "subtitle-studio\dist\SubtitleStudio\SubtitleStudio.exe"
+          $env:SUBTITLE_MODEL = "tiny"
+          $process = Start-Process -FilePath $exe -PassThru -WindowStyle Hidden
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 45; $i++) {
+              if ($process.HasExited) { throw "App exited before startup" }
+              try {
+                $response = Invoke-WebRequest -Uri "http://127.0.0.1:8765" -TimeoutSec 2
+                if ($response.StatusCode -eq 200 -and $response.Content -match "자막 작업실") {
+                  $ready = $true
+                  break
+                }
+              } catch {}
+              Start-Sleep -Seconds 1
+            }
+            if (-not $ready) { throw "Packaged app did not serve its interface" }
+            $layout = Invoke-WebRequest -Uri "http://127.0.0.1:8765/static/segmentation.js" -TimeoutSec 10
+            if ($layout.Content -notmatch "reflowSegments") { throw "Packaged app missing caption layout script" }
+            $preview = Invoke-WebRequest -Uri "http://127.0.0.1:8765/static/preview-placeholder.svg" -TimeoutSec 10
+            if ($preview.Content -notmatch "<svg") { throw "Packaged app missing preview image" }
+            $env:SAMPLE_AUDIO = Join-Path $env:RUNNER_TEMP "sample.wav"
+            @'
+          import os
+          import wave
+          with wave.open(os.environ["SAMPLE_AUDIO"], "wb") as audio:
+              audio.setnchannels(1)
+              audio.setsampwidth(2)
+              audio.setframerate(16000)
+              audio.writeframes(b"\x00\x00" * 32000)
+          '@ | python -
+            $transcribed = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/transcribe" -Method Post -Form @{ file = Get-Item $env:SAMPLE_AUDIO; language = "ko" } -TimeoutSec 300
+            if ($null -eq $transcribed.segments) { throw "Packaged app did not transcribe a WAV file" }
+            $review = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/proofread-local" -Method Post -ContentType "application/json" -Body '{"segments":[{"id":1,"text":"띄어쓰기없이작성된텍스트네이걸교정해줘"}]}' -TimeoutSec 60
+            if ($review.suggestions.Count -lt 1) { throw "Packaged app did not suggest a spacing correction" }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SubtitleStudio-Windows
+          path: subtitle-studio/dist/SubtitleStudio/
+          retention-days: 14
+          if-no-files-found: error
+
+  publish-preview:
+    if: github.event_name == 'push'
+    needs: windows-package
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SubtitleStudio-Windows
+          path: SubtitleStudio
+      - name: Create downloadable ZIP
+        shell: pwsh
+        run: Compress-Archive -Path SubtitleStudio -DestinationPath SubtitleStudio-Windows.zip
+      - name: Publish preview release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create subtitle-studio-preview-20261014-r10
+          SubtitleStudio-Windows.zip
+          --repo "${{ github.repository }}"
+          --target "${{ github.sha }}"
+          --title "Subtitle Studio Windows preview"
+          --notes "Windows portable preview with fast/accurate modes, highlighted proofing and duplicate notices, line length control, and cut-review SRT, and configurable maximum lines per cue, and 9:17/16:9 image-backed subtitle preview, and caption deletion and Enter/Backspace cue editing. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --prerelease
