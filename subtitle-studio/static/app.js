@@ -127,6 +127,24 @@ function reflowCurrent() {
   segments = SubtitleLayout.reflowSegments(segments, maxChars(), maxLines(),
     () => "split-" + Date.now() + "-" + Math.random());
 }
+function focusCue(index, caret) {
+  requestAnimationFrame(() => {
+    const field = el("items").querySelectorAll(".item textarea")[index];
+    if (!field) return;
+    field.focus();
+    field.setSelectionRange(caret, caret);
+    field.scrollIntoView({ block: "nearest" });
+  });
+}
+function applyKeyboardEdit(result, message) {
+  segments = result.segments;
+  lastRemoval = null;
+  suggestions.clear();
+  previewIndex = result.focusIndex;
+  render();
+  focusCue(result.focusIndex, result.caret);
+  showStatus(message, false);
+}
 function setSuggestions(items) {
   const limit = maxChars();
   suggestions = new Map(items.map((item) => [
@@ -358,6 +376,28 @@ function render() {
       card.querySelector(".suggest")?.remove();
     });
     card.append(text);
+    text.addEventListener("keydown", (event) => {
+      if (event.isComposing || event.keyCode === 229) return;
+      if (event.key === "Enter") {
+        event.preventDefault();
+        seg.text = text.value;
+        const result = SubtitleLayout.splitCue(segments, index,
+          text.selectionStart, text.selectionEnd,
+          () => "key-" + Date.now() + "-" + Math.random());
+        applyKeyboardEdit(result, "커서 위치에서 자막을 나누고 시간을 배분했습니다.");
+      } else if (event.key === "Backspace" &&
+          text.selectionStart === 0 && text.selectionEnd === 0 && index > 0) {
+        event.preventDefault();
+        seg.text = text.value;
+        const result = SubtitleLayout.mergeCueUp(segments, index,
+          () => "key-" + Date.now() + "-" + Math.random());
+        if (!result) {
+          showStatus("컷 검토 상태가 다른 자막은 먼저 같은 상태로 맞춰 주세요.", true);
+          return;
+        }
+        applyKeyboardEdit(result, "윗자막과 합쳤습니다. 합쳐진 시간과 줄 수를 확인해 주세요.");
+      }
+    });
     text.addEventListener("change", () => setTimeout(() => {
       if (!segments.includes(seg)) return;
       reflowCurrent();

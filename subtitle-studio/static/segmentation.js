@@ -75,7 +75,44 @@
     }
     return output;
   }
-  const api = { wrapText, splitText, reflowSegments };
+  function splitCue(segments, index, selectionStart, selectionEnd, newId) {
+    const cue = segments[index];
+    if (!cue) return null;
+    const source = String(cue.text);
+    const from = Math.max(0, Math.min(source.length, selectionStart));
+    const to = Math.max(from, Math.min(source.length, selectionEnd));
+    const before = source.slice(0, from).trimEnd();
+    const after = source.slice(to).trimStart();
+    const start = Math.max(0, Number(cue.start) || 0);
+    const end = Math.max(start + 0.02, Number(cue.end) || 0);
+    const total = Array.from(before + after).length;
+    const ratio = total ? Array.from(before).length / total : 0.5;
+    const boundary = start + (end - start) * Math.max(0.15, Math.min(0.85, ratio));
+    const first = { ...cue, text: before, end: boundary,
+      flowGroup: "manual-" + newId(), joinNext: false };
+    const second = { ...cue, id: newId(), text: after, start: boundary, end,
+      flowGroup: "manual-" + newId(), joinNext: false,
+      joinPrevious: from > 0 && to < source.length &&
+        !/\\s/.test(source[from - 1]) && !/\\s/.test(source[to]) };
+    const output = segments.slice();
+    output.splice(index, 1, first, second);
+    return { segments: output, focusIndex: index + 1, caret: 0 };
+  }
+  function mergeCueUp(segments, index, newId) {
+    if (index <= 0 || index >= segments.length) return null;
+    const previous = segments[index - 1], current = segments[index];
+    if (!!previous.deleted !== !!current.deleted) return null;
+    const left = previous.text.trimEnd(), right = current.text.trimStart();
+    const separator = left && right && !current.joinPrevious ? " " : "";
+    const combined = { ...previous, text: left + separator + right,
+      end: Math.max(Number(previous.end) || 0, Number(current.end) || 0),
+      flowGroup: "manual-" + newId(), joinNext: false };
+    const output = segments.slice();
+    output.splice(index - 1, 2, combined);
+    return { segments: output, focusIndex: index - 1,
+      caret: left.length + separator.length };
+  }
+  const api = { wrapText, splitText, reflowSegments, splitCue, mergeCueUp };
   root.SubtitleLayout = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

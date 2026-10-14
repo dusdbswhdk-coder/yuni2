@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { reflowSegments } = require("../static/segmentation.js");
+const { reflowSegments, splitCue, mergeCueUp } = require("../static/segmentation.js");
 
 test("changing from two lines to one creates sequential cues and changing back merges them", () => {
   let id = 0;
@@ -43,4 +43,40 @@ test("a cut review fragment keeps its flag and timing when layout changes", () =
   assert.equal(next.filter((cue) => cue.deleted).length, 1);
   assert.equal(next.find((cue) => cue.deleted).start, parts[1].start);
   assert.equal(next.find((cue) => cue.deleted).end, parts[1].end);
+});
+
+test("Enter splits at the caret and Backspace at the next cue start rejoins it", () => {
+  let id = 0;
+  const original = [{ id: 1, flowGroup: "source-1", start: 3, end: 7,
+    text: "안녕하세요 반갑습니다", deleted: false }];
+  const split = splitCue(original, 0, 6, 6, () => ++id);
+  assert.equal(split.segments.length, 2);
+  assert.equal(split.segments[0].text, "안녕하세요");
+  assert.equal(split.segments[1].text, "반갑습니다");
+  assert.equal(split.segments[0].start, 3);
+  assert.equal(split.segments[1].end, 7);
+  assert.equal(split.segments[0].end, split.segments[1].start);
+  assert.equal(split.focusIndex, 1);
+  const joined = mergeCueUp(split.segments, 1, () => ++id);
+  assert.equal(joined.segments.length, 1);
+  assert.equal(joined.segments[0].text, original[0].text);
+  assert.equal(joined.segments[0].start, 3);
+  assert.equal(joined.segments[0].end, 7);
+  assert.equal(joined.caret, 6);
+});
+
+test("splitting inside a word rejoins without inventing a space", () => {
+  let id = 0;
+  const source = [{ id: 1, start: 0, end: 2, text: "바지락" }];
+  const split = splitCue(source, 0, 1, 1, () => ++id);
+  assert.equal(split.segments[1].text, "지락");
+  assert.equal(mergeCueUp(split.segments, 1, () => ++id).segments[0].text, "바지락");
+  assert.equal(mergeCueUp(source, 0, () => ++id), null);
+});
+
+test("merging a cut review cue into a normal cue is blocked", () => {
+  const cues = [{ id: 1, text: "하나", deleted: false },
+    { id: 2, text: "둘", deleted: true }];
+  assert.equal(mergeCueUp(cues, 1, () => "next"), null);
+  assert.equal(cues.length, 2);
 });
