@@ -54,3 +54,31 @@ def test_optional_ai_check_requires_api_key(monkeypatch):
     client = TestClient(subtitle_app.app)
     response = client.post("/api/proofread", json={"segments": []})
     assert response.status_code == 400
+
+def test_model_uses_private_cache_and_retries_busy_download(monkeypatch, tmp_path):
+    import sys
+    from types import SimpleNamespace
+
+    calls = []
+    ready_model = object()
+
+    class BusyFile(OSError):
+        winerror = 32
+
+    def fake_whisper(name, **options):
+        calls.append((name, options))
+        if len(calls) == 1:
+            raise BusyFile("file is in use")
+        return ready_model
+
+    cache = tmp_path / "models"
+    monkeypatch.setenv("SUBTITLE_MODEL_CACHE", str(cache))
+    monkeypatch.setitem(sys.modules, "faster_whisper", SimpleNamespace(WhisperModel=fake_whisper))
+    monkeypatch.setattr(subtitle_app, "_model", None)
+    monkeypatch.setattr(subtitle_app, "sleep", lambda seconds: None)
+
+    assert subtitle_app.model() is ready_model
+    assert subtitle_app.model() is ready_model
+    assert len(calls) == 2
+    assert calls[0][1]["download_root"] == str(cache)
+    assert cache.is_dir()

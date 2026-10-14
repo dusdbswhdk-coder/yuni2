@@ -4,6 +4,10 @@
 
 ## Windows에서 시작하기
 
+**간편 실행:** [SubtitleStudio-Windows.zip](https://github.com/dusdbswhdk-coder/yuni2/releases/download/subtitle-studio-preview-20261014-r2/SubtitleStudio-Windows.zip)을 다운로드해 압축을 풀고, `SubtitleStudio/SubtitleStudio.exe`를 실행하세요. Python 설치는 필요하지 않습니다. 첫 자막 추출 때 음성 인식 모델을 인터넷으로 내려받으며, 완료되면 PC에 보관됩니다.
+
+**소스 코드로 실행하려면:**
+
 1. [이 브랜치](https://github.com/dusdbswhdk-coder/yuni2/tree/codex/subtitle-studio-mvp-20261014)에서 **Code → Download ZIP**을 선택하고 압축을 풉니다.
 2. Python 3.11 이상을 설치합니다. 설치할 때 **Add python.exe to PATH**를 체크합니다.
 3. 압축을 푼 폴더의 subtitle-studio 안에서 **setup_windows.bat**을 한 번 실행합니다. 인터넷 연결이 필요합니다.

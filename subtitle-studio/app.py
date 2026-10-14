@@ -6,6 +6,8 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from threading import Lock
+from time import sleep
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -16,20 +18,38 @@ ROOT = Path(__file__).resolve().parent
 app = FastAPI(title="자막 작업실")
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 _model = None
+_model_lock = Lock()
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".mp4", ".mov", ".m4a", ".mp3", ".wav", ".webm", ".flac"}
 
 
 def model():
     global _model
-    if _model is None:
+    if _model is not None:
+        return _model
+
+    # Keep downloads separate from other apps using the shared Hugging Face cache.
+    with _model_lock:
+        if _model is not None:
+            return _model
         from faster_whisper import WhisperModel
 
-        _model = WhisperModel(
-            os.getenv("SUBTITLE_MODEL", "small"),
-            device=os.getenv("SUBTITLE_DEVICE", "auto"),
-            compute_type=os.getenv("SUBTITLE_COMPUTE_TYPE", "default"),
-        )
+        default_cache = Path(os.getenv("LOCALAPPDATA") or Path.home() / ".cache") / "SubtitleStudio" / "models"
+        cache_dir = Path(os.getenv("SUBTITLE_MODEL_CACHE") or default_cache)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        for attempt in range(3):
+            try:
+                _model = WhisperModel(
+                    os.getenv("SUBTITLE_MODEL", "small"),
+                    device=os.getenv("SUBTITLE_DEVICE", "auto"),
+                    compute_type=os.getenv("SUBTITLE_COMPUTE_TYPE", "default"),
+                    download_root=str(cache_dir),
+                )
+                break
+            except OSError as exc:
+                if getattr(exc, "winerror", None) != 32 or attempt == 2:
+                    raise
+                sleep(2 * (attempt + 1))
     return _model
 
 
