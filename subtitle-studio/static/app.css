@@ -31,3 +31,5 @@
 .item.cut-pending{border-color:#b65d5c;background:#38272d}
 .item.cut-pending .item-head strong{color:#ffa9a1}
 .item.cut-pending textarea{border-color:#9c585a}
+
+.editor-tools select{padding:7px;width:70px;margin-left:3px}

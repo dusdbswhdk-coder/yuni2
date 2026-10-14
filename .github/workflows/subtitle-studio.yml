@@ -29,6 +29,8 @@ jobs:
           node-version: '22'
       - run: python -m pip install -r subtitle-studio/requirements.txt pytest httpx
       - run: node --check subtitle-studio/static/app.js
+      - run: node --check subtitle-studio/static/segmentation.js
+      - run: node --test subtitle-studio/tests/test_segmentation.cjs
       - run: python -m compileall -q subtitle-studio/app.py
       - run: python -m pytest -q tests
         working-directory: subtitle-studio
@@ -115,10 +117,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create subtitle-studio-preview-20261014-r6
+          gh release create subtitle-studio-preview-20261014-r7
           SubtitleStudio-Windows.zip
           --repo "${{ github.repository }}"
           --target "${{ github.sha }}"
           --title "Subtitle Studio Windows preview"
-          --notes "Windows portable preview with fast/accurate modes, highlighted proofing and duplicate notices, line length control, and cut-review SRT. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --notes "Windows portable preview with fast/accurate modes, highlighted proofing and duplicate notices, line length control, and cut-review SRT, and configurable maximum lines per cue. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
           --prerelease

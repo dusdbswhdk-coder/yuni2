@@ -111,22 +111,16 @@ function maxChars() {
   const count = Number(el("lineLength").value);
   return Number.isInteger(count) && count >= 4 && count <= 40 ? count : 16;
 }
+function maxLines() {
+  const count = Number(el("maxLines").value);
+  return Number.isInteger(count) && count >= 1 && count <= 3 ? count : 3;
+}
 function wrapText(text, limit) {
-  const words = String(text).replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
-  const lines = [];
-  let line = "";
-  for (const word of words) {
-    const chars = Array.from(word);
-    if (line && Array.from(line).length + 1 + chars.length <= limit) {
-      line += " " + word;
-      continue;
-    }
-    if (line) { lines.push(line); line = ""; }
-    while (chars.length > limit) lines.push(chars.splice(0, limit).join(""));
-    line = chars.join("");
-  }
-  if (line) lines.push(line);
-  return lines.join("\n");
+  return SubtitleLayout.wrapText(text, limit);
+}
+function reflowCurrent() {
+  segments = SubtitleLayout.reflowSegments(segments, maxChars(), maxLines(),
+    () => "split-" + Date.now() + "-" + Math.random());
 }
 function setSuggestions(items) {
   const limit = maxChars();
@@ -277,6 +271,7 @@ function render() {
       input.value = seg[key];
       input.addEventListener("change", () => {
         seg[key] = Math.max(0, Number(input.value) || 0);
+        seg.flowGroup = "timed-" + Date.now() + "-" + Math.random();
         renderTimeline();
       });
       label.append(input);
@@ -305,11 +300,16 @@ function render() {
     text.setAttribute("aria-label", (index + 1) + "번 자막");
     text.addEventListener("input", () => {
       seg.text = text.value;
+      seg.joinNext = false;
       suggestions.delete(String(seg.id));
       card.querySelector(".suggest")?.remove();
     });
     card.append(text);
-    text.addEventListener("change", () => setTimeout(render, 0));
+    text.addEventListener("change", () => setTimeout(() => {
+      reflowCurrent();
+      suggestions.clear();
+      render();
+    }, 0));
     const duplicate = seg.deleted ? null : duplicates.get(index);
     if (duplicate) {
       const box = document.createElement("div");
@@ -334,8 +334,10 @@ function render() {
       const accept = document.createElement("button");
       accept.textContent = "이 제안 적용";
       accept.addEventListener("click", () => {
-        seg.text = wrapText(suggestion.corrected, maxChars());
-        suggestions.delete(String(seg.id));
+        seg.text = suggestion.corrected;
+        seg.joinNext = false;
+        suggestions.clear();
+        reflowCurrent();
         render();
       });
       box.append(title, before, after, reason, accept);
@@ -356,14 +358,16 @@ el("file").addEventListener("change", () => {
     showStatus(file.name + " 선택됨", false);
   }
 });
-el("lineLength").addEventListener("input", () => {
+function applyLayout() {
   const count = Number(el("lineLength").value);
   if (!Number.isInteger(count) || count < 4 || count > 40) return;
-  for (const seg of segments) seg.text = wrapText(seg.text, count);
-  for (const suggestion of suggestions.values()) suggestion.corrected = wrapText(suggestion.corrected, count);
+  reflowCurrent();
+  suggestions.clear();
   render();
-  if (segments.length) showStatus("한 줄 최대 " + count + "글자를 자막에 적용했습니다.", false);
-});
+  if (segments.length) showStatus("한 줄 " + count + "글자 · 자막당 최대 " + maxLines() + "줄을 적용했습니다.", false);
+}
+el("lineLength").addEventListener("input", applyLayout);
+el("maxLines").addEventListener("change", applyLayout);
 el("start").addEventListener("click", async () => {
   const file = el("file").files[0];
   if (!file) return showStatus("파일을 먼저 선택해 주세요.", true);
@@ -379,7 +383,10 @@ el("start").addEventListener("click", async () => {
     const response = await fetch("/api/transcribe", { method: "POST", body: form });
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail || "변환에 실패했습니다.");
-    segments = result.segments.map((seg) => ({ ...seg, deleted: false, text: wrapText(seg.text, maxChars()) }));
+    segments = result.segments.map((seg, index) => ({
+      ...seg, deleted: false, flowGroup: "source-" + index, joinNext: false
+    }));
+    reflowCurrent();
     suggestions.clear();
     render();
     showStatus(segments.length + "개 구간 완료 · 감지 언어 " + result.language, false);
@@ -439,8 +446,9 @@ el("checkAi").addEventListener("click", async () => {
 });
 el("add").addEventListener("click", () => {
   const start = Number(el("player").currentTime.toFixed(2)) || 0;
+  const id = "new-" + Date.now() + "-" + Math.random();
   segments.push({
-    id: "new-" + Date.now() + "-" + Math.random(),
+    id, flowGroup: id, joinNext: false,
     start, end: start + 2, text: "", original: "", deleted: false
   });
   render();

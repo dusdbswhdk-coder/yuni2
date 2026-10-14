@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#11141e">
   <title>자막 작업실</title>
   <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/segmentation.js" defer></script>
   <script src="/static/app.js" defer></script>
 </head>
 <body>
@@ -48,9 +49,10 @@
       </aside>
       <section class="panel editor">
         <div class="editor-head">
-          <div class="section-title"><span class="number">03</span><div><h2>자막 편집 <small id="count"></small></h2><p>문장과 시작·끝 시간을 직접 고칠 수 있습니다. 글자 수를 바꾸면 아래 자막에 바로 적용됩니다.</p></div></div>
+          <div class="section-title"><span class="number">03</span><div><h2>자막 편집 <small id="count"></small></h2><p>문장과 시작·끝 시간을 직접 고칠 수 있습니다. 글자 수와 줄 수를 바꾸면 자막이 즉시 나뉘고 시간도 원래 구간에 맞춰 배분됩니다.</p></div></div>
           <div class="editor-tools">
             <label for="lineLength">한 줄 최대 <input id="lineLength" type="number" min="4" max="40" step="1" value="16" aria-label="한 줄 최대 글자 수"> 글자</label>
+            <label for="maxLines">자막당 최대 <select id="maxLines" aria-label="자막당 최대 줄 수"><option value="1">1줄</option><option value="2">2줄</option><option value="3" selected>3줄</option></select></label>
             <button id="add" class="secondary" disabled>+ 구간 추가</button>
           </div>
         </div>
