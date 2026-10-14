@@ -36,7 +36,7 @@
       <aside class="panel side">
         <div class="section-title"><span class="number">02</span><div><h2>미리보기와 검사</h2><p>음성을 들으며 문장을 확인하세요.</p></div></div>
         <video id="player" controls playsinline preload="metadata"></video>
-        <div class="timeline-label">영상 구간 · <span>빨간색은 컷 검토</span></div>
+        <div class="timeline-label">자막 타임라인 · <span>보라색 자막 / 빨간색 컷 검토</span></div>
         <div id="timeline" class="timeline" aria-label="컷 검토 시간 구간"></div>
         <p class="hint">구간의 이동 버튼을 누르면 해당 시점으로 갑니다.</p>
         <div class="preview-head">
@@ -63,11 +63,12 @@
       </aside>
       <section class="panel editor">
         <div class="editor-head">
-          <div class="section-title"><span class="number">03</span><div><h2>자막 편집 <small id="count"></small></h2><p>문장과 시작·끝 시간을 직접 고칠 수 있습니다. 글자 수와 줄 수를 바꾸면 자막이 즉시 나뉘고 시간도 원래 구간에 맞춰 배분됩니다.</p></div></div>
+          <div class="section-title"><span class="number">03</span><div><h2>자막 편집 <small id="count"></small></h2><p>문장과 시작·끝 시간을 직접 고칠 수 있습니다. 자막 삭제 시 아래 구간의 번호가 당겨지며, 남은 자막의 영상 기준 시간은 유지됩니다. 글자 수와 줄 수를 바꾸면 자막이 나뉩니다.</p></div></div>
           <div class="editor-tools">
             <label for="lineLength">한 줄 최대 <input id="lineLength" type="number" min="4" max="40" step="1" value="16" aria-label="한 줄 최대 글자 수"> 글자</label>
             <label for="maxLines">자막당 최대 <select id="maxLines" aria-label="자막당 최대 줄 수"><option value="1">1줄</option><option value="2">2줄</option><option value="3" selected>3줄</option></select></label>
             <button id="add" class="secondary" disabled>+ 구간 추가</button>
+            <button id="undoDelete" class="secondary" disabled>삭제 되돌리기</button>
           </div>
         </div>
         <div id="items" class="items"><div class="empty">자막을 추출하면 구간별 문장이 여기에 표시됩니다.</div></div>

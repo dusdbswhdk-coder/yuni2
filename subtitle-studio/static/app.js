@@ -6,6 +6,7 @@ let suggestions = new Map();
 let mediaUrl = null;
 let previewImageUrl = null;
 let previewIndex = 0;
+let lastRemoval = null;
 let busy = false;
 
 function showStatus(message, error) {
@@ -19,6 +20,7 @@ function setBusy(value) {
     el(id).disabled = value || segments.length === 0;
   }
   el("reviewSrt").disabled = value || !segments.some((seg) => seg.deleted);
+  el("undoDelete").disabled = value || !lastRemoval;
 }
 function fileBase() {
   const name = el("file").files[0]?.name || "subtitles";
@@ -121,6 +123,7 @@ function wrapText(text, limit) {
   return SubtitleLayout.wrapText(text, limit);
 }
 function reflowCurrent() {
+  lastRemoval = null;
   segments = SubtitleLayout.reflowSegments(segments, maxChars(), maxLines(),
     () => "split-" + Date.now() + "-" + Math.random());
 }
@@ -236,21 +239,24 @@ function renderTimeline() {
   track.replaceChildren();
   const duration = el("player").duration;
   if (!Number.isFinite(duration) || duration <= 0) return;
-  for (const seg of segments.filter((entry) => entry.deleted)) {
+  segments.forEach((seg, index) => {
+    if (!seg.text.trim()) return;
     const marker = document.createElement("button");
-    marker.className = "cut-marker";
+    marker.className = seg.deleted ? "cue-marker cut-marker" : "cue-marker";
     const start = Math.max(0, Math.min(duration, Number(seg.start) || 0));
     const end = Math.max(start, Math.min(duration, Number(seg.end) || start));
     marker.style.left = (start / duration * 100) + "%";
     marker.style.width = Math.max(0.4, (end - start) / duration * 100) + "%";
-    marker.title = "컷 검토 " + srtTime(start) + " ~ " + srtTime(end);
+    marker.title = "#" + (index + 1) + (seg.deleted ? " 컷 검토" : " 자막") +
+      " " + srtTime(start) + " ~ " + srtTime(end);
     marker.setAttribute("aria-label", marker.title);
     marker.addEventListener("click", () => {
+      previewIndex = index;
       el("player").currentTime = start;
-      el("player").play().catch(() => {});
+      renderPreview();
     });
     track.append(marker);
-  }
+  });
 }
 el("player").addEventListener("loadedmetadata", renderTimeline);
 el("player").addEventListener("timeupdate", () => {
@@ -316,7 +322,30 @@ function render() {
       suggestions.delete(String(seg.id));
       render();
     });
-    head.append(jump, remove);
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "delete-cue";
+    deleteButton.textContent = "자막 삭제";
+    deleteButton.setAttribute("aria-label", (index + 1) + "번 자막 삭제");
+    deleteButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const prior = segments[index - 1], next = segments[index + 1];
+      const renamed = [];
+      if (prior && next && prior.flowGroup === seg.flowGroup &&
+          next.flowGroup === seg.flowGroup) {
+        const newGroup = "after-delete-" + Date.now() + "-" + Math.random();
+        for (let j = index + 1; j < segments.length && segments[j].flowGroup === seg.flowGroup; j++) {
+          renamed.push(segments[j]);
+          segments[j].flowGroup = newGroup;
+        }
+      }
+      lastRemoval = { segment: seg, index, renamed, oldGroup: seg.flowGroup };
+      segments.splice(index, 1);
+      suggestions.delete(String(seg.id));
+      if (previewIndex >= index) previewIndex = Math.max(0, previewIndex - (previewIndex > index ? 1 : 0));
+      render();
+      showStatus("#" + (index + 1) + " 자막을 삭제했습니다. 뒤 자막의 번호만 당겨지고 영상 기준 시간은 유지됩니다.", false);
+    });
+    head.append(jump, remove, deleteButton);
     card.append(head);
     const text = document.createElement("textarea");
     text.value = seg.text;
@@ -330,6 +359,7 @@ function render() {
     });
     card.append(text);
     text.addEventListener("change", () => setTimeout(() => {
+      if (!segments.includes(seg)) return;
       reflowCurrent();
       suggestions.clear();
       render();
@@ -480,6 +510,16 @@ el("checkAi").addEventListener("click", async () => {
   } finally {
     setBusy(false);
   }
+});
+el("undoDelete").addEventListener("click", () => {
+  if (!lastRemoval) return;
+  const { segment, index, renamed, oldGroup } = lastRemoval;
+  renamed.forEach((part) => { if (segments.includes(part)) part.flowGroup = oldGroup; });
+  segments.splice(Math.min(index, segments.length), 0, segment);
+  lastRemoval = null;
+  previewIndex = index;
+  render();
+  showStatus("삭제한 자막을 되돌렸습니다.", false);
 });
 el("add").addEventListener("click", () => {
   const start = Number(el("player").currentTime.toFixed(2)) || 0;
