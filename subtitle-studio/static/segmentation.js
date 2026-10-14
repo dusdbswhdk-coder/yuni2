@@ -93,7 +93,7 @@
     const second = { ...cue, id: newId(), text: after, start: boundary, end,
       flowGroup: "manual-" + newId(), joinNext: false,
       joinPrevious: from > 0 && to < source.length &&
-        !/\\s/.test(source[from - 1]) && !/\\s/.test(source[to]) };
+        !/\s/.test(source[from - 1]) && !/\s/.test(source[to]) };
     const output = segments.slice();
     output.splice(index, 1, first, second);
     return { segments: output, focusIndex: index + 1, caret: 0 };
