@@ -106,3 +106,14 @@ def test_accurate_mode_keeps_word_timestamps(monkeypatch):
     assert response.status_code == 200
     assert options_seen["beam_size"] == 5
     assert options_seen["word_timestamps"] is True
+
+def test_local_proofread_suggests_spacing():
+    response = TestClient(subtitle_app.app).post(
+        "/api/proofread-local",
+        json={"segments": [{"id": 1, "text": "띄어쓰기없이작성된텍스트네이걸교정해줘"}]},
+    )
+    assert response.status_code == 200
+    suggestions = response.json()["suggestions"]
+    assert len(suggestions) == 1
+    assert suggestions[0]["id"] == "1"
+    assert suggestions[0]["corrected"] != "띄어쓰기없이작성된텍스트네이걸교정해줘"

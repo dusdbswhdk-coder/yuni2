@@ -57,6 +57,54 @@ function exportSegments() {
       text: seg.text.trim()
     }));
 }
+
+function diffRuns(original, corrected) {
+  const a = Array.from(original), b = Array.from(corrected);
+  const runs = [];
+  const add = (kind, char) => {
+    if (runs.length && runs[runs.length - 1].kind === kind) runs[runs.length - 1].text += char;
+    else runs.push({ kind, text: char });
+  };
+  if (a.length * b.length > 30000) {
+    let start = 0, endA = a.length, endB = b.length;
+    while (start < endA && start < endB && a[start] === b[start]) start++;
+    while (endA > start && endB > start && a[endA - 1] === b[endB - 1]) { endA--; endB--; }
+    a.slice(0, start).forEach((x) => add("same", x));
+    a.slice(start, endA).forEach((x) => add("removed", x));
+    b.slice(start, endB).forEach((x) => add("added", x));
+    a.slice(endA).forEach((x) => add("same", x));
+    return runs;
+  }
+  const dp = Array.from({ length: a.length + 1 }, () => new Uint16Array(b.length + 1));
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) {
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  let i = 0, j = 0;
+  while (i < a.length || j < b.length) {
+    if (i < a.length && j < b.length && a[i] === b[j]) add("same", a[i++]), j++;
+    else if (i < a.length && (j === b.length || dp[i + 1][j] >= dp[i][j + 1])) add("removed", a[i++]);
+    else add("added", b[j++]);
+  }
+  return runs;
+}
+function diffLine(label, runs, selected, markerClass) {
+  const line = document.createElement("p");
+  line.className = "diff-line";
+  const heading = document.createElement("b");
+  heading.textContent = label;
+  line.append(heading);
+  for (const run of runs) {
+    if (run.kind !== "same" && run.kind !== selected) continue;
+    const part = document.createElement(run.kind === "same" ? "span" : "mark");
+    if (run.kind !== "same") part.className = markerClass;
+    part.textContent = run.text;
+    line.append(part);
+  }
+  return line;
+}
+
 function render() {
   const list = el("items");
   list.replaceChildren();
@@ -124,8 +172,9 @@ function render() {
       box.className = "suggest";
       const title = document.createElement("strong");
       title.textContent = "수정 제안";
-      const proposed = document.createElement("p");
-      proposed.textContent = suggestion.corrected;
+      const runs = diffRuns(seg.text, suggestion.corrected);
+      const before = diffLine("원문 · ", runs, "removed", "suspect");
+      const after = diffLine("추천 · ", runs, "added", "correction");
       const reason = document.createElement("small");
       reason.textContent = suggestion.reason;
       const accept = document.createElement("button");
@@ -135,7 +184,7 @@ function render() {
         suggestions.delete(String(seg.id));
         render();
       });
-      box.append(title, proposed, reason, accept);
+      box.append(title, before, after, reason, accept);
       card.append(box);
     }
     list.append(card);
@@ -179,26 +228,28 @@ el("start").addEventListener("click", async () => {
   }
 });
 
-const rules = [
-  ["되서", "돼서"], ["되요", "돼요"], ["됬", "됐"],
-  ["아니예요", "아니에요"], ["할께", "할게"], ["할수 ", "할 수 "],
-  ["할수있", "할 수 있"], ["할수없", "할 수 없"],
-  ["오랫만에", "오랜만에"], ["왠일", "웬일"], ["몇일", "며칠"],
-  ["깨끗히", "깨끗이"], ["설겆이", "설거지"], ["역활", "역할"],
-  ["어의없", "어이없"], ["메세지", "메시지"], ["금새", "금세"],
-  ["데이타", "데이터"], ["가장 최고", "최고"]
-];
-el("checkLocal").addEventListener("click", () => {
-  suggestions.clear();
-  for (const seg of segments) {
-    let corrected = seg.text;
-    for (const [from, to] of rules) corrected = corrected.replaceAll(from, to);
-    if (corrected !== seg.text) suggestions.set(String(seg.id), {
-      corrected, reason: "기본 표기 규칙 제안 · 문맥을 확인해 주세요."
+el("checkLocal").addEventListener("click", async () => {
+  setBusy(true);
+  showStatus("띄어쓰기와 기본 표기를 검사 중입니다.", false);
+  try {
+    const response = await fetch("/api/proofread-local", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        segments: segments.map(({ id, text }) => ({ id, text })),
+        protected_terms: el("terms").value
+      })
     });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || "기본 검사에 실패했습니다.");
+    suggestions = new Map(result.suggestions.map((item) => [String(item.id), item]));
+    render();
+    showStatus(suggestions.size ? suggestions.size + "개 구간에서 의심 표현을 찾았습니다. 빨간 표시와 추천 표현을 확인해 주세요." : "검사 완료 · 제안할 표현을 찾지 못했습니다. 원문을 직접 확인해 주세요.", false);
+  } catch (error) {
+    showStatus(error.message, true);
+  } finally {
+    setBusy(false);
   }
-  render();
-  showStatus(suggestions.size + "개 기본 수정 제안. 원문과 비교해 적용해 주세요.", false);
 });
 el("checkAi").addEventListener("click", async () => {
   setBusy(true);

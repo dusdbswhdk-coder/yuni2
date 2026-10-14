@@ -111,6 +111,58 @@ class ProofreadRequest(BaseModel):
     protected_terms: str = ""
 
 
+_LOCAL_RULES = (
+    ("되서", "돼서"), ("되요", "돼요"), ("됬", "됐"),
+    ("아니예요", "아니에요"), ("할께", "할게"), ("할수 ", "할 수 "),
+    ("할수있", "할 수 있"), ("할수없", "할 수 없"),
+    ("오랫만에", "오랜만에"), ("왠일", "웬일"), ("몇일", "며칠"),
+    ("깨끗히", "깨끗이"), ("설겆이", "설거지"), ("역활", "역할"),
+    ("어의없", "어이없"), ("메세지", "메시지"), ("금새", "금세"),
+    ("데이타", "데이터"), ("가장 최고", "최고"),
+)
+_kiwi = None
+_kiwi_lock = Lock()
+
+
+def local_checker():
+    global _kiwi
+    if _kiwi is None:
+        with _kiwi_lock:
+            if _kiwi is None:
+                from kiwipiepy import Kiwi
+                _kiwi = Kiwi()
+    return _kiwi
+
+
+@app.post("/api/proofread-local")
+def proofread_local(payload: ProofreadRequest):
+    if len(payload.segments) > 1000:
+        raise HTTPException(400, "한 번에 1,000개 이하의 구간을 검사해 주세요.")
+    terms = [term.strip() for term in payload.protected_terms.split(",") if term.strip()]
+    suggestions = []
+    try:
+        checker = local_checker()
+        for item in payload.segments:
+            original = str(item.get("text", ""))[:500]
+            if not original.strip():
+                continue
+            corrected = checker.space(original)
+            for wrong, right in _LOCAL_RULES:
+                corrected = corrected.replace(wrong, right)
+            if corrected == original:
+                continue
+            if any(term in original and term not in corrected for term in terms):
+                continue
+            suggestions.append({
+                "id": str(item.get("id")),
+                "corrected": corrected,
+                "reason": "띄어쓰기·기본 표기 제안. 음성과 고유명사를 확인해 주세요.",
+            })
+    except Exception as exc:
+        raise HTTPException(500, f"기본 검사에 실패했습니다: {exc}") from exc
+    return {"suggestions": suggestions}
+
+
 @app.post("/api/proofread")
 def proofread(payload: ProofreadRequest):
     if not os.getenv("OPENAI_API_KEY"):

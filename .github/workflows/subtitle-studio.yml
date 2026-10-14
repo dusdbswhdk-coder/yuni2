@@ -49,6 +49,7 @@ jobs:
           --add-data "static;static"
           --collect-all faster_whisper --collect-all ctranslate2
           --collect-all av --collect-all onnxruntime
+          --collect-all kiwipiepy --collect-all kiwipiepy_model
           launcher.py
         working-directory: subtitle-studio
       - name: Smoke test packaged server
@@ -83,6 +84,8 @@ jobs:
           '@ | python -
             $transcribed = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/transcribe" -Method Post -Form @{ file = Get-Item $env:SAMPLE_AUDIO; language = "ko" } -TimeoutSec 300
             if ($null -eq $transcribed.segments) { throw "Packaged app did not transcribe a WAV file" }
+            $review = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/proofread-local" -Method Post -ContentType "application/json" -Body '{"segments":[{"id":1,"text":"띄어쓰기없이작성된텍스트네이걸교정해줘"}]}' -TimeoutSec 60
+            if ($review.suggestions.Count -lt 1) { throw "Packaged app did not suggest a spacing correction" }
           } finally {
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
           }
@@ -112,10 +115,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create subtitle-studio-preview-20261014-r4
+          gh release create subtitle-studio-preview-20261014-r5
           SubtitleStudio-Windows.zip
           --repo "${{ github.repository }}"
           --target "${{ github.sha }}"
           --title "Subtitle Studio Windows preview"
-          --notes "Windows portable preview with selectable fast and accurate transcription modes. CPU by default; private model cache. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --notes "Windows portable preview with selectable transcription modes and local Korean spacing suggestions with highlighted diffs. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
           --prerelease
