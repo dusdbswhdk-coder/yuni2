@@ -115,10 +115,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create subtitle-studio-preview-20261014-r5
+          gh release create subtitle-studio-preview-20261014-r6
           SubtitleStudio-Windows.zip
           --repo "${{ github.repository }}"
           --target "${{ github.sha }}"
           --title "Subtitle Studio Windows preview"
-          --notes "Windows portable preview with selectable transcription modes and local Korean spacing suggestions with highlighted diffs. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --notes "Windows portable preview with fast/accurate modes, highlighted proofing and duplicate notices, line length control, and cut-review SRT. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
           --prerelease

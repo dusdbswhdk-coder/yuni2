@@ -16,6 +16,7 @@ function setBusy(value) {
   for (const id of ["checkLocal", "checkAi", "add", "srt", "txt", "ass"]) {
     el(id).disabled = value || segments.length === 0;
   }
+  el("reviewSrt").disabled = value || !segments.some((seg) => seg.deleted);
 }
 function fileBase() {
   const name = el("file").files[0]?.name || "subtitles";
@@ -47,8 +48,8 @@ function assTime(value) {
     String(Math.floor(cs / 100) % 60).padStart(2, "0") + "." +
     String(cs % 100).padStart(2, "0");
 }
-function exportSegments() {
-  return segments.filter((seg) => seg.text.trim())
+function exportSegments(includeDeleted = false) {
+  return segments.filter((seg) => seg.text.trim() && (includeDeleted || !seg.deleted))
     .slice().sort((a, b) => a.start - b.start)
     .map((seg) => ({
       ...seg,
@@ -105,21 +106,161 @@ function diffLine(label, runs, selected, markerClass) {
   return line;
 }
 
+
+function maxChars() {
+  const count = Number(el("lineLength").value);
+  return Number.isInteger(count) && count >= 4 && count <= 40 ? count : 16;
+}
+function wrapText(text, limit) {
+  const words = String(text).replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  const lines = [];
+  let line = "";
+  for (const word of words) {
+    const chars = Array.from(word);
+    if (line && Array.from(line).length + 1 + chars.length <= limit) {
+      line += " " + word;
+      continue;
+    }
+    if (line) { lines.push(line); line = ""; }
+    while (chars.length > limit) lines.push(chars.splice(0, limit).join(""));
+    line = chars.join("");
+  }
+  if (line) lines.push(line);
+  return lines.join("\n");
+}
+function setSuggestions(items) {
+  const limit = maxChars();
+  suggestions = new Map(items.map((item) => [
+    String(item.id), { ...item, corrected: wrapText(item.corrected, limit) }
+  ]).filter(([id, item]) =>
+    segments.some((seg) => String(seg.id) === id && seg.text !== item.corrected)
+  ));
+}
+
+
+function findDuplicates(items) {
+  const found = new Map();
+  const phraseIndex = new Map();
+  const gramIndex = new Map();
+  const gramSets = [];
+  const add = (index, start, end, other) => {
+    if (end <= start) return;
+    if (!found.has(index)) found.set(index, { spans: [], others: new Set() });
+    found.get(index).spans.push({ start, end });
+    found.get(index).others.add(other + 1);
+  };
+  items.forEach((seg, index) => {
+    if (seg.deleted) { gramSets.push(new Set()); return; }
+    const text = seg.text;
+    const words = [...text.matchAll(/\S+/g)].map((match) => ({
+      text: match[0].replace(/[\p{P}\p{S}]/gu, "").toLowerCase(),
+      start: match.index, end: match.index + match[0].length
+    }));
+    for (let start = 0; start < words.length; start++) {
+      for (let size = 2; size <= 4 && start + size <= words.length; size++) {
+        const group = words.slice(start, start + size);
+        const key = group.map((word) => word.text).join(" ");
+        if (key.replace(/\s/g, "").length < 8) continue;
+        const span = { index, start: group[0].start, end: group[group.length - 1].end };
+        const prior = phraseIndex.get(key) || [];
+        for (const match of prior) {
+          if (match.index === index) continue;
+          add(index, span.start, span.end, match.index);
+          add(match.index, match.start, match.end, index);
+        }
+        if (!prior.some((match) => match.index === index) && prior.length < 3) prior.push(span);
+        phraseIndex.set(key, prior);
+      }
+    }
+    const compact = text.replace(/[\s\p{P}\p{S}]/gu, "").toLowerCase();
+    const grams = new Set();
+    if (compact.length >= 8) {
+      for (let k = 0; k <= compact.length - 3; k++) grams.add(compact.slice(k, k + 3));
+    }
+    const candidates = new Map();
+    for (const gram of grams) {
+      for (const other of gramIndex.get(gram) || []) {
+        candidates.set(other, (candidates.get(other) || 0) + 1);
+      }
+    }
+    for (const [other, shared] of candidates) {
+      const priorCompact = items[other].text.replace(/[\s\p{P}\p{S}]/gu, "").toLowerCase();
+      if (Math.min(compact.length, priorCompact.length) / Math.max(compact.length, priorCompact.length) < 0.75) continue;
+      const score = 2 * shared / (grams.size + gramSets[other].size);
+      if (score >= 0.82) {
+        add(index, 0, text.length, other);
+        add(other, 0, items[other].text.length, index);
+      }
+    }
+    gramSets.push(grams);
+    for (const gram of grams) {
+      if (!gramIndex.has(gram)) gramIndex.set(gram, []);
+      gramIndex.get(gram).push(index);
+    }
+  });
+  return found;
+}
+function duplicatePreview(text, spans) {
+  const line = document.createElement("p");
+  line.className = "duplicate-preview";
+  const merged = [];
+  for (const span of spans.sort((a, b) => a.start - b.start || b.end - a.end)) {
+    const last = merged[merged.length - 1];
+    if (last && span.start <= last.end) last.end = Math.max(last.end, span.end);
+    else merged.push({ ...span });
+  }
+  let position = 0;
+  for (const span of merged) {
+    line.append(document.createTextNode(text.slice(position, span.start)));
+    const mark = document.createElement("mark");
+    mark.textContent = text.slice(span.start, span.end);
+    line.append(mark);
+    position = span.end;
+  }
+  line.append(document.createTextNode(text.slice(position)));
+  return line;
+}
+
+function renderTimeline() {
+  const track = el("timeline");
+  track.replaceChildren();
+  const duration = el("player").duration;
+  if (!Number.isFinite(duration) || duration <= 0) return;
+  for (const seg of segments.filter((entry) => entry.deleted)) {
+    const marker = document.createElement("button");
+    marker.className = "cut-marker";
+    const start = Math.max(0, Math.min(duration, Number(seg.start) || 0));
+    const end = Math.max(start, Math.min(duration, Number(seg.end) || start));
+    marker.style.left = (start / duration * 100) + "%";
+    marker.style.width = Math.max(0.4, (end - start) / duration * 100) + "%";
+    marker.title = "컷 검토 " + srtTime(start) + " ~ " + srtTime(end);
+    marker.setAttribute("aria-label", marker.title);
+    marker.addEventListener("click", () => {
+      el("player").currentTime = start;
+      el("player").play().catch(() => {});
+    });
+    track.append(marker);
+  }
+}
+el("player").addEventListener("loadedmetadata", renderTimeline);
+
 function render() {
   const list = el("items");
   list.replaceChildren();
-  el("count").textContent = "(" + segments.length + "구간)";
+  el("count").textContent = "(" + segments.length + "구간 · 컷 검토 " + segments.filter((seg) => seg.deleted).length + ")";
   if (!segments.length) {
     const empty = document.createElement("div");
     empty.className = "empty";
     empty.textContent = "인식된 음성이 없습니다.";
     list.append(empty);
     setBusy(busy);
+    renderTimeline();
     return;
   }
+  const duplicates = findDuplicates(segments);
   segments.forEach((seg, index) => {
     const card = document.createElement("article");
-    card.className = "item";
+    card.className = seg.deleted ? "item cut-pending" : "item";
     const head = document.createElement("div");
     head.className = "item-head";
     const number = document.createElement("strong");
@@ -136,6 +277,7 @@ function render() {
       input.value = seg[key];
       input.addEventListener("change", () => {
         seg[key] = Math.max(0, Number(input.value) || 0);
+        renderTimeline();
       });
       label.append(input);
       head.append(label);
@@ -149,9 +291,10 @@ function render() {
     });
     const remove = document.createElement("button");
     remove.className = "secondary";
-    remove.textContent = "삭제";
+    remove.textContent = seg.deleted ? "컷 검토 취소" : "컷 검토 표시";
+    remove.setAttribute("aria-pressed", String(!!seg.deleted));
     remove.addEventListener("click", () => {
-      segments.splice(index, 1);
+      seg.deleted = !seg.deleted;
       suggestions.delete(String(seg.id));
       render();
     });
@@ -166,6 +309,17 @@ function render() {
       card.querySelector(".suggest")?.remove();
     });
     card.append(text);
+    text.addEventListener("change", () => setTimeout(render, 0));
+    const duplicate = seg.deleted ? null : duplicates.get(index);
+    if (duplicate) {
+      const box = document.createElement("div");
+      box.className = "duplicate-box";
+      const related = [...duplicate.others].sort((a, b) => a - b).slice(0, 3).map((n) => "#" + n).join(", ");
+      const heading = document.createElement("strong");
+      heading.textContent = "중복 의심 · " + related + " 자막과 비슷";
+      box.append(heading, duplicatePreview(seg.text, duplicate.spans));
+      card.append(box);
+    }
     const suggestion = suggestions.get(String(seg.id));
     if (suggestion) {
       const box = document.createElement("div");
@@ -180,7 +334,7 @@ function render() {
       const accept = document.createElement("button");
       accept.textContent = "이 제안 적용";
       accept.addEventListener("click", () => {
-        seg.text = suggestion.corrected;
+        seg.text = wrapText(suggestion.corrected, maxChars());
         suggestions.delete(String(seg.id));
         render();
       });
@@ -190,6 +344,7 @@ function render() {
     list.append(card);
   });
   setBusy(busy);
+  renderTimeline();
 }
 
 el("file").addEventListener("change", () => {
@@ -200,6 +355,14 @@ el("file").addEventListener("change", () => {
     el("player").src = mediaUrl;
     showStatus(file.name + " 선택됨", false);
   }
+});
+el("lineLength").addEventListener("input", () => {
+  const count = Number(el("lineLength").value);
+  if (!Number.isInteger(count) || count < 4 || count > 40) return;
+  for (const seg of segments) seg.text = wrapText(seg.text, count);
+  for (const suggestion of suggestions.values()) suggestion.corrected = wrapText(suggestion.corrected, count);
+  render();
+  if (segments.length) showStatus("한 줄 최대 " + count + "글자를 자막에 적용했습니다.", false);
 });
 el("start").addEventListener("click", async () => {
   const file = el("file").files[0];
@@ -216,7 +379,7 @@ el("start").addEventListener("click", async () => {
     const response = await fetch("/api/transcribe", { method: "POST", body: form });
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail || "변환에 실패했습니다.");
-    segments = result.segments;
+    segments = result.segments.map((seg) => ({ ...seg, deleted: false, text: wrapText(seg.text, maxChars()) }));
     suggestions.clear();
     render();
     showStatus(segments.length + "개 구간 완료 · 감지 언어 " + result.language, false);
@@ -236,13 +399,13 @@ el("checkLocal").addEventListener("click", async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        segments: segments.map(({ id, text }) => ({ id, text })),
+        segments: segments.filter((seg) => !seg.deleted).map(({ id, text }) => ({ id, text })),
         protected_terms: el("terms").value
       })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail || "기본 검사에 실패했습니다.");
-    suggestions = new Map(result.suggestions.map((item) => [String(item.id), item]));
+    setSuggestions(result.suggestions);
     render();
     showStatus(suggestions.size ? suggestions.size + "개 구간에서 의심 표현을 찾았습니다. 빨간 표시와 추천 표현을 확인해 주세요." : "검사 완료 · 제안할 표현을 찾지 못했습니다. 원문을 직접 확인해 주세요.", false);
   } catch (error) {
@@ -259,13 +422,13 @@ el("checkAi").addEventListener("click", async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        segments: segments.map(({ id, text }) => ({ id, text })),
+        segments: segments.filter((seg) => !seg.deleted).map(({ id, text }) => ({ id, text })),
         protected_terms: el("terms").value
       })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail || "검사에 실패했습니다.");
-    suggestions = new Map(result.suggestions.map((item) => [String(item.id), item]));
+    setSuggestions(result.suggestions);
     render();
     showStatus(suggestions.size + "개 AI 수정 제안. 확인 후 선택 적용해 주세요.", false);
   } catch (error) {
@@ -278,7 +441,7 @@ el("add").addEventListener("click", () => {
   const start = Number(el("player").currentTime.toFixed(2)) || 0;
   segments.push({
     id: "new-" + Date.now() + "-" + Math.random(),
-    start, end: start + 2, text: "", original: ""
+    start, end: start + 2, text: "", original: "", deleted: false
   });
   render();
   el("items").lastElementChild?.scrollIntoView({ behavior: "smooth" });
@@ -289,6 +452,13 @@ el("srt").addEventListener("click", () => {
     "\n" + seg.text + "\n"
   ).join("\n");
   download("srt", body, "application/x-subrip");
+});
+el("reviewSrt").addEventListener("click", () => {
+  const body = exportSegments(true).map((seg, index) =>
+    (index + 1) + "\n" + srtTime(seg.start) + " --> " + srtTime(seg.end) +
+    "\n" + (seg.deleted ? "[컷 검토] " : "") + seg.text + "\n"
+  ).join("\n");
+  download("review.srt", body, "application/x-subrip");
 });
 el("txt").addEventListener("click", () => {
   download("txt", exportSegments().map((seg) => seg.text).join("\n"), "text/plain");

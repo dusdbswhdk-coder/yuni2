@@ -35,6 +35,8 @@
       <aside class="panel side">
         <div class="section-title"><span class="number">02</span><div><h2>미리보기와 검사</h2><p>음성을 들으며 문장을 확인하세요.</p></div></div>
         <video id="player" controls playsinline preload="metadata"></video>
+        <div class="timeline-label">영상 구간 · <span>빨간색은 컷 검토</span></div>
+        <div id="timeline" class="timeline" aria-label="컷 검토 시간 구간"></div>
         <p class="hint">구간의 이동 버튼을 누르면 해당 시점으로 갑니다.</p>
         <label for="terms">보호할 브랜드명·제품명</label>
         <input id="terms" type="text" value="KCC, 숲으로, 스포탄" placeholder="쉼표로 구분">
@@ -46,13 +48,17 @@
       </aside>
       <section class="panel editor">
         <div class="editor-head">
-          <div class="section-title"><span class="number">03</span><div><h2>자막 편집 <small id="count"></small></h2><p>문장과 시작·끝 시간을 직접 고칠 수 있습니다.</p></div></div>
-          <button id="add" class="secondary" disabled>+ 구간 추가</button>
+          <div class="section-title"><span class="number">03</span><div><h2>자막 편집 <small id="count"></small></h2><p>문장과 시작·끝 시간을 직접 고칠 수 있습니다. 글자 수를 바꾸면 아래 자막에 바로 적용됩니다.</p></div></div>
+          <div class="editor-tools">
+            <label for="lineLength">한 줄 최대 <input id="lineLength" type="number" min="4" max="40" step="1" value="16" aria-label="한 줄 최대 글자 수"> 글자</label>
+            <button id="add" class="secondary" disabled>+ 구간 추가</button>
+          </div>
         </div>
         <div id="items" class="items"><div class="empty">자막을 추출하면 구간별 문장이 여기에 표시됩니다.</div></div>
         <div class="export">
           <span>편집한 내용으로 저장</span>
-          <button id="srt" class="primary" disabled>SRT 다운로드</button>
+          <button id="srt" class="primary" disabled>최종 SRT</button>
+          <button id="reviewSrt" class="secondary" disabled>검토용 SRT</button>
           <button id="txt" class="secondary" disabled>TXT</button>
           <button id="ass" class="secondary" disabled>ASS</button>
         </div>
