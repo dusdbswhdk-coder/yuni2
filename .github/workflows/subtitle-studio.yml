@@ -26,3 +26,50 @@ jobs:
       - run: python -m compileall -q subtitle-studio/app.py
       - run: python -m pytest -q tests
         working-directory: subtitle-studio
+
+  windows-package:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt pyinstaller
+        working-directory: subtitle-studio
+      - name: Build portable Windows app
+        run: >
+          pyinstaller --noconfirm --clean --onedir --name SubtitleStudio
+          --add-data "static;static"
+          --collect-all faster_whisper --collect-all ctranslate2
+          --collect-all av --collect-all onnxruntime
+          launcher.py
+        working-directory: subtitle-studio
+      - name: Smoke test packaged server
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD "subtitle-studio\dist\SubtitleStudio\SubtitleStudio.exe"
+          $process = Start-Process -FilePath $exe -PassThru -WindowStyle Hidden
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 45; $i++) {
+              if ($process.HasExited) { throw "App exited before startup" }
+              try {
+                $response = Invoke-WebRequest -Uri "http://127.0.0.1:8765" -TimeoutSec 2
+                if ($response.StatusCode -eq 200 -and $response.Content -match "자막 작업실") {
+                  $ready = $true
+                  break
+                }
+              } catch {}
+              Start-Sleep -Seconds 1
+            }
+            if (-not $ready) { throw "Packaged app did not serve its interface" }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SubtitleStudio-Windows
+          path: subtitle-studio/dist/SubtitleStudio/
+          retention-days: 14
+          if-no-files-found: error
