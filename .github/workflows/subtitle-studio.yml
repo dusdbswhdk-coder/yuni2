@@ -4,6 +4,12 @@ on:
     paths:
       - 'subtitle-studio/**'
       - '.github/workflows/subtitle-studio.yml'
+  push:
+    branches:
+      - codex/subtitle-studio-mvp-20261014
+    paths:
+      - 'subtitle-studio/**'
+      - '.github/workflows/subtitle-studio.yml'
   workflow_dispatch:
 
 jobs:
@@ -73,3 +79,30 @@ jobs:
           path: subtitle-studio/dist/SubtitleStudio/
           retention-days: 14
           if-no-files-found: error
+
+  publish-preview:
+    if: github.event_name == 'push'
+    needs: windows-package
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SubtitleStudio-Windows
+          path: SubtitleStudio
+      - name: Create downloadable ZIP
+        shell: pwsh
+        run: Compress-Archive -Path SubtitleStudio -DestinationPath SubtitleStudio-Windows.zip
+      - name: Publish preview release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create subtitle-studio-preview-20261014
+          SubtitleStudio-Windows.zip
+          --repo "${{ github.repository }}"
+          --target "${{ github.sha }}"
+          --title "Subtitle Studio Windows preview"
+          --notes "Windows portable preview. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --prerelease
