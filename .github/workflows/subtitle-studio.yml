@@ -74,6 +74,10 @@ jobs:
               Start-Sleep -Seconds 1
             }
             if (-not $ready) { throw "Packaged app did not serve its interface" }
+            $layout = Invoke-WebRequest -Uri "http://127.0.0.1:8765/static/segmentation.js" -TimeoutSec 10
+            if ($layout.Content -notmatch "reflowSegments") { throw "Packaged app missing caption layout script" }
+            $preview = Invoke-WebRequest -Uri "http://127.0.0.1:8765/static/preview-placeholder.svg" -TimeoutSec 10
+            if ($preview.Content -notmatch "<svg") { throw "Packaged app missing preview image" }
             $env:SAMPLE_AUDIO = Join-Path $env:RUNNER_TEMP "sample.wav"
             @'
           import os
@@ -117,10 +121,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create subtitle-studio-preview-20261014-r7
+          gh release create subtitle-studio-preview-20261014-r8
           SubtitleStudio-Windows.zip
           --repo "${{ github.repository }}"
           --target "${{ github.sha }}"
           --title "Subtitle Studio Windows preview"
-          --notes "Windows portable preview with fast/accurate modes, highlighted proofing and duplicate notices, line length control, and cut-review SRT, and configurable maximum lines per cue. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --notes "Windows portable preview with fast/accurate modes, highlighted proofing and duplicate notices, line length control, and cut-review SRT, and configurable maximum lines per cue, and 9:17/16:9 image-backed subtitle preview. CPU by default. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
           --prerelease

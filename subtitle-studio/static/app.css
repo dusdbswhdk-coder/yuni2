@@ -33,3 +33,15 @@
 .item.cut-pending textarea{border-color:#9c585a}
 
 .editor-tools select{padding:7px;width:70px;margin-left:3px}
+
+.preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:22px;color:#e4e8f3;font-size:14px}
+.preview-head select{padding:7px 9px}
+.side .preview-upload{margin:13px 0 6px;color:#cbd1de}
+.side input[type=file]#previewImage{display:block;width:100%;font-size:12px}
+.preview-frame{position:relative;width:min(100%,260px);aspect-ratio:9/17;margin:14px auto 4px;border-radius:10px;overflow:hidden;background:#596b76;border:1px solid #687788}
+.preview-frame.landscape{width:100%;aspect-ratio:16/9}
+.preview-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.preview-caption{position:absolute;left:4%;bottom:9%;width:92%;padding:4px 2px;color:#fff;text-align:center;white-space:pre;line-height:1.35;font-weight:800;text-shadow:0 2px 4px #000,0 0 12px #000;pointer-events:none}
+.item.preview-selected{box-shadow:inset 0 0 0 1px #aaa3ff}
+
+.preview-caption.cut{color:#ffd1c9}

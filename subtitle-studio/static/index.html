@@ -39,6 +39,20 @@
         <div class="timeline-label">영상 구간 · <span>빨간색은 컷 검토</span></div>
         <div id="timeline" class="timeline" aria-label="컷 검토 시간 구간"></div>
         <p class="hint">구간의 이동 버튼을 누르면 해당 시점으로 갑니다.</p>
+        <div class="preview-head">
+          <strong>자막 화면 미리보기</strong>
+          <select id="previewRatio" aria-label="미리보기 화면 비율">
+            <option value="portrait">세로 9:17</option>
+            <option value="landscape">가로 16:9</option>
+          </select>
+        </div>
+        <label class="preview-upload" for="previewImage">배경 사진 선택 (선택사항)</label>
+        <input id="previewImage" type="file" accept="image/*" aria-label="미리보기 배경 사진">
+        <div id="previewFrame" class="preview-frame">
+          <img id="previewPicture" src="/static/preview-placeholder.svg" alt="미리보기 예시 배경">
+          <div id="previewCaption" class="preview-caption">자막을 추출하면 여기에 표시됩니다.</div>
+        </div>
+        <p class="hint">자막 구간을 누르면 이 화면에 표시됩니다. 화면 비율과 줄바꿈을 확인하는 미리보기이며, 원본 영상에는 적용되지 않습니다.</p>
         <label for="terms">보호할 브랜드명·제품명</label>
         <input id="terms" type="text" value="KCC, 숲으로, 스포탄" placeholder="쉼표로 구분">
         <div class="actions">

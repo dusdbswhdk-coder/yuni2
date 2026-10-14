@@ -4,6 +4,8 @@ const el = (id) => document.getElementById(id);
 let segments = [];
 let suggestions = new Map();
 let mediaUrl = null;
+let previewImageUrl = null;
+let previewIndex = 0;
 let busy = false;
 
 function showStatus(message, error) {
@@ -215,6 +217,20 @@ function duplicatePreview(text, spans) {
   return line;
 }
 
+function renderPreview() {
+  const frame = el("previewFrame");
+  const caption = el("previewCaption");
+  previewIndex = Math.max(0, Math.min(previewIndex, Math.max(0, segments.length - 1)));
+  const seg = segments[previewIndex];
+  caption.textContent = seg ? (seg.deleted ? "[컷 검토]\n" : "") + seg.text : "자막을 추출하면 여기에 표시됩니다.";
+  caption.classList.toggle("cut", !!seg?.deleted);
+  const longest = Math.max(1, ...caption.textContent.split("\n").map((line) => Array.from(line).length));
+  caption.style.fontSize = Math.min(frame.classList.contains("landscape") ? 25 : 20,
+    Math.max(6, Math.floor((frame.clientWidth - 26) / longest))) + "px";
+  document.querySelectorAll(".item").forEach((card, index) => {
+    card.classList.toggle("preview-selected", index === previewIndex);
+  });
+}
 function renderTimeline() {
   const track = el("timeline");
   track.replaceChildren();
@@ -237,6 +253,11 @@ function renderTimeline() {
   }
 }
 el("player").addEventListener("loadedmetadata", renderTimeline);
+el("player").addEventListener("timeupdate", () => {
+  const position = el("player").currentTime;
+  const index = segments.findIndex((seg) => position >= Number(seg.start) && position < Number(seg.end));
+  if (index >= 0 && index !== previewIndex) { previewIndex = index; renderPreview(); }
+});
 
 function render() {
   const list = el("items");
@@ -249,12 +270,14 @@ function render() {
     list.append(empty);
     setBusy(busy);
     renderTimeline();
+    renderPreview();
     return;
   }
   const duplicates = findDuplicates(segments);
   segments.forEach((seg, index) => {
     const card = document.createElement("article");
     card.className = seg.deleted ? "item cut-pending" : "item";
+    card.addEventListener("click", () => { previewIndex = index; renderPreview(); });
     const head = document.createElement("div");
     head.className = "item-head";
     const number = document.createElement("strong");
@@ -301,6 +324,7 @@ function render() {
     text.addEventListener("input", () => {
       seg.text = text.value;
       seg.joinNext = false;
+      if (previewIndex === index) renderPreview();
       suggestions.delete(String(seg.id));
       card.querySelector(".suggest")?.remove();
     });
@@ -347,7 +371,19 @@ function render() {
   });
   setBusy(busy);
   renderTimeline();
+  renderPreview();
 }
+
+el("previewRatio").addEventListener("change", () => {
+  el("previewFrame").classList.toggle("landscape", el("previewRatio").value === "landscape");
+  renderPreview();
+});
+el("previewImage").addEventListener("change", () => {
+  if (previewImageUrl) URL.revokeObjectURL(previewImageUrl);
+  const file = el("previewImage").files[0];
+  previewImageUrl = file ? URL.createObjectURL(file) : null;
+  el("previewPicture").src = previewImageUrl || "/static/preview-placeholder.svg";
+});
 
 el("file").addEventListener("change", () => {
   if (mediaUrl) URL.revokeObjectURL(mediaUrl);
@@ -387,6 +423,7 @@ el("start").addEventListener("click", async () => {
       ...seg, deleted: false, flowGroup: "source-" + index, joinNext: false
     }));
     reflowCurrent();
+    previewIndex = 0;
     suggestions.clear();
     render();
     showStatus(segments.length + "개 구간 완료 · 감지 언어 " + result.language, false);

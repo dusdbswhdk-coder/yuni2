@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1600" viewBox="0 0 900 1600" role="img" aria-label="거실 예시 배경">
+<defs>
+  <linearGradient id="wall" x2="1" y2="1"><stop stop-color="#798b95"/><stop offset="1" stop-color="#526775"/></linearGradient>
+  <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#bfdde9"/><stop offset="1" stop-color="#f1d7b2"/></linearGradient>
+  <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#887a6f"/><stop offset="1" stop-color="#665d59"/></linearGradient>
+  <linearGradient id="shade" x2="0" y2="1"><stop stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#11131c" stop-opacity=".55"/></linearGradient>
+</defs>
+<path fill="url(#wall)" d="M0 0h900v1600H0z"/>
+<path fill="#9dacb0" d="M88 85h724v985H88z"/>
+<path fill="#394d58" d="M110 106h680v942H110z"/>
+<path fill="url(#sky)" d="M132 128h636v898H132z"/>
+<circle cx="600" cy="379" r="113" fill="#fff4d4" opacity=".8"/>
+<path d="M132 840Q335 575 544 838Q680 701 768 787v239H132z" fill="#8fa8a4"/>
+<path d="M132 902Q322 780 518 932Q666 830 768 898v128H132z" fill="#6c8e91"/>
+<path fill="#e0e3dc" d="M431 128h38v898h-38zM132 555h636v35H132z"/>
+<path fill="#d0d6d1" d="M110 1026h680v22H110z"/>
+<path fill="url(#floor)" d="M0 1080h900v520H0z"/>
+<path fill="#414b55" d="M32 1182q0-49 50-49h736q50 0 50 49v227H32z"/>
+<path fill="#677782" d="M75 1120q0-48 49-48h270q48 0 48 48v187H75zm383 0q0-48 48-48h270q49 0 49 48v187H458z"/>
+<path fill="#53636f" d="M57 1290h786v95H57z"/>
+<path fill="#cfb894" d="M75 1385h750v15H75z"/>
+<path fill="#aeb5a9" d="M700 1086q63-128 54-287M704 1011q-129-84-114-194M742 966q136-120 109-204" stroke="#52695b" stroke-width="18" fill="none"/>
+<path d="M752 837q-146-34-128-118q99 8 128 118zm-43 105q-110-73-91-136q82 19 91 136zm52-66q13-113 105-121q17 86-105 121z" fill="#8ba389"/>
+<path d="M662 1040h167l-22 120H682z" fill="#c4aa8f"/>
+<path fill="url(#shade)" d="M0 0h900v1600H0z"/>
+</svg>
