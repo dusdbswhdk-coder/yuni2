@@ -7,7 +7,7 @@ test("changing from two lines to one creates sequential cues and changing back m
   let id = 0;
   const nextId = () => "part-" + ++id;
   const original = [{ id: 1, flowGroup: "source-1", start: 2, end: 8,
-    text: "하나 둘 셋 넷 다섯 여섯", deleted: false, joinNext: false }];
+    text: "하나 둘 셋 넷 다섯 여섯 일곱", deleted: false, joinNext: false }];
   const two = reflowSegments(original, 7, 2, nextId);
   const one = reflowSegments(two, 7, 1, nextId);
   assert.equal(two.length, 2);
@@ -37,7 +37,7 @@ test("a long unspaced word is not changed when split cues are regrouped", () => 
 test("a cut review fragment keeps its flag and timing when layout changes", () => {
   let id = 10;
   const parts = reflowSegments([{ id: 1, flowGroup: "source", start: 0,
-    end: 6, text: "하나 둘 셋 넷 다섯 여섯" }], 7, 1, () => ++id);
+    end: 6, text: "하나 둘 셋 넷 다섯 여섯 일곱" }], 7, 1, () => ++id);
   parts[1].deleted = true;
   const next = reflowSegments(parts, 7, 1, () => ++id);
   assert.equal(next.filter((cue) => cue.deleted).length, 1);
