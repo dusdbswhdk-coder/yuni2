@@ -112,10 +112,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create subtitle-studio-preview-20261014-r3
+          gh release create subtitle-studio-preview-20261014-r4
           SubtitleStudio-Windows.zip
           --repo "${{ github.repository }}"
           --target "${{ github.sha }}"
           --title "Subtitle Studio Windows preview"
-          --notes "Windows portable preview using CPU by default to avoid missing CUDA DLLs, plus private model cache and retry for WinError 32. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
+          --notes "Windows portable preview with selectable fast and accurate transcription modes. CPU by default; private model cache. Download the ZIP, extract it, then run SubtitleStudio/SubtitleStudio.exe. This build is under review in PR #2."
           --prerelease

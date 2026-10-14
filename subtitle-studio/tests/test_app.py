@@ -18,11 +18,13 @@ class FakeModel:
         with open(path, "rb") as source:
             assert source.read() == b"video bytes"
         assert options["language"] == "ko"
+        assert options["beam_size"] == 1
+        assert options["word_timestamps"] is False
         return iter([FakeSegment()]), FakeInfo()
 
 
 def test_transcription_returns_editable_timed_segments(monkeypatch):
-    monkeypatch.setattr(subtitle_app, "_model", FakeModel())
+    monkeypatch.setattr(subtitle_app, "model", lambda size: FakeModel())
     client = TestClient(subtitle_app.app)
     response = client.post(
         "/api/transcribe",
@@ -75,12 +77,32 @@ def test_model_uses_private_cache_and_retries_busy_download(monkeypatch, tmp_pat
     monkeypatch.setenv("SUBTITLE_MODEL_CACHE", str(cache))
     monkeypatch.setitem(sys.modules, "faster_whisper", SimpleNamespace(WhisperModel=fake_whisper))
     monkeypatch.setattr(subtitle_app, "_model", None)
+    monkeypatch.setattr(subtitle_app, "_model_key", None)
     monkeypatch.setattr(subtitle_app, "sleep", lambda seconds: None)
 
-    assert subtitle_app.model() is ready_model
-    assert subtitle_app.model() is ready_model
+    assert subtitle_app.model("base") is ready_model
+    assert subtitle_app.model("base") is ready_model
     assert len(calls) == 2
+    assert calls[0][0] == "base"
     assert calls[0][1]["download_root"] == str(cache)
     assert calls[0][1]["device"] == "cpu"
     assert calls[0][1]["compute_type"] == "int8"
     assert cache.is_dir()
+
+def test_accurate_mode_keeps_word_timestamps(monkeypatch):
+    options_seen = {}
+
+    class AccurateModel(FakeModel):
+        def transcribe(self, path, **options):
+            options_seen.update(options)
+            return iter([FakeSegment()]), FakeInfo()
+
+    monkeypatch.setattr(subtitle_app, "model", lambda size: AccurateModel() if size == "small" else None)
+    response = TestClient(subtitle_app.app).post(
+        "/api/transcribe",
+        data={"language": "ko", "quality": "accurate"},
+        files={"file": ("sample.wav", b"audio", "audio/wav")},
+    )
+    assert response.status_code == 200
+    assert options_seen["beam_size"] == 5
+    assert options_seen["word_timestamps"] is True

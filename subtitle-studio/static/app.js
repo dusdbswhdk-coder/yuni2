@@ -156,10 +156,13 @@ el("start").addEventListener("click", async () => {
   const file = el("file").files[0];
   if (!file) return showStatus("파일을 먼저 선택해 주세요.", true);
   setBusy(true);
-  showStatus("음성을 분석 중입니다. 영상 길이와 PC 성능에 따라 시간이 걸립니다.", false);
+  const startedAt = Date.now();
+  const timer = setInterval(() => showStatus("분석 중 · " + Math.floor((Date.now() - startedAt) / 1000) + "초 경과", false), 1000);
+  showStatus("분석을 시작합니다. 첫 실행이면 모델을 내려받습니다.", false);
   const form = new FormData();
   form.append("file", file);
   form.append("language", el("language").value);
+  form.append("quality", el("quality").value);
   try {
     const response = await fetch("/api/transcribe", { method: "POST", body: form });
     const result = await response.json();
@@ -171,6 +174,7 @@ el("start").addEventListener("click", async () => {
   } catch (error) {
     showStatus(error.message, true);
   } finally {
+    clearInterval(timer);
     setBusy(false);
   }
 });

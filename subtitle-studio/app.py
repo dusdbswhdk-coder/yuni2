@@ -18,19 +18,21 @@ ROOT = Path(__file__).resolve().parent
 app = FastAPI(title="자막 작업실")
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 _model = None
+_model_key = None
 _model_lock = Lock()
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".mp4", ".mov", ".m4a", ".mp3", ".wav", ".webm", ".flac"}
 
 
-def model():
-    global _model
-    if _model is not None:
+def model(model_size: str):
+    global _model, _model_key
+    selected = os.getenv("SUBTITLE_MODEL") or model_size
+    if _model is not None and _model_key == selected:
         return _model
 
     # Keep downloads separate from other apps using the shared Hugging Face cache.
     with _model_lock:
-        if _model is not None:
+        if _model is not None and _model_key == selected:
             return _model
         from faster_whisper import WhisperModel
 
@@ -40,11 +42,12 @@ def model():
         for attempt in range(3):
             try:
                 _model = WhisperModel(
-                    os.getenv("SUBTITLE_MODEL", "small"),
+                    selected,
                     device=os.getenv("SUBTITLE_DEVICE", "cpu"),
                     compute_type=os.getenv("SUBTITLE_COMPUTE_TYPE", "int8"),
                     download_root=str(cache_dir),
                 )
+                _model_key = selected
                 break
             except OSError as exc:
                 if getattr(exc, "winerror", None) != 32 or attempt == 2:
@@ -59,12 +62,14 @@ def index():
 
 
 @app.post("/api/transcribe")
-def transcribe(file: UploadFile = File(...), language: str = Form("ko")):
+def transcribe(file: UploadFile = File(...), language: str = Form("ko"), quality: str = Form("fast")):
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, "지원하지 않는 파일 형식입니다.")
     if language not in {"ko", "en", "ja", "zh", "auto"}:
         raise HTTPException(400, "지원하지 않는 언어입니다.")
+    if quality not in {"fast", "accurate"}:
+        raise HTTPException(400, "지원하지 않는 처리 방식입니다.")
 
     total = 0
     with tempfile.TemporaryDirectory(prefix="subtitle-studio-") as directory:
@@ -78,11 +83,12 @@ def transcribe(file: UploadFile = File(...), language: str = Form("ko")):
         if total == 0:
             raise HTTPException(400, "빈 파일입니다.")
         try:
-            parts, info = model().transcribe(
+            parts, info = model("base" if quality == "fast" else "small").transcribe(
                 str(path),
                 language=None if language == "auto" else language,
                 vad_filter=True,
-                word_timestamps=True,
+                beam_size=1 if quality == "fast" else 5,
+                word_timestamps=quality == "accurate",
             )
             result = [
                 {
